@@ -2,8 +2,9 @@
 A Discord-Framework made in Java using Discord 4J. Made for making the creation of Bot's for Discord quicker
 
 ### How to use
-```Comming soon
-```
+``
+Comming soon
+``
 #### Current Version: 1.0.0
 ### With Maven
 In your `pom.xml` add:

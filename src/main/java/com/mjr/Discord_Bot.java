@@ -65,6 +65,27 @@ public abstract class Discord_Bot {
 		}
 	}
 
+	public Message sendMessageMessageChannelReturnMessageOBJ(Mono<MessageChannel> channel, String message) {
+		return sendMessageReturnMessageOBJ(channel.ofType(Channel.class), message);
+	}
+
+	public Message sendMessageReturnMessageOBJ(Mono<Channel> channel, String message) {
+		if (client == null)
+			return null;
+		if (client.isConnected() == false)
+			return null;
+		onOutputMessage(MessageType.Info, "Discord: Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+		try {
+			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + error.getMessage());
+			});
+			return messageReturn.block();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + e.getMessage());
+			return null;
+		}
+	}
+	
 	public Mono<Message> sendMessageMessageChannel(Mono<MessageChannel> channel, String message) {
 		return sendMessage(channel.ofType(Channel.class), message);
 	}

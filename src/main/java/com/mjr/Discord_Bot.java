@@ -86,6 +86,10 @@ public abstract class Discord_Bot {
 			return null;
 		}
 	}
+	
+	public Mono<Message> sendMessageMessageChannel(Mono<MessageChannel> channel,EmbedCreateSpec builder) {
+		return sendMessage(channel.ofType(Channel.class), builder);
+	}
 
 	private Mono<Message> sendMessage(Mono<Channel> channel, EmbedCreateSpec builder) {
 		if (client == null)

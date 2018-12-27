@@ -1,6 +1,7 @@
 package com.mjr;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +11,10 @@ import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.EventDispatcher;
 import discord4j.core.object.entity.Channel;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.entity.TextChannel;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
@@ -61,6 +65,10 @@ public abstract class Discord_Bot {
 		}
 	}
 
+	public Mono<Message> sendMessageMessageChannel(Mono<MessageChannel> channel, String message) {
+		return sendMessage(channel.ofType(Channel.class), message);
+	}
+
 	public Mono<Message> sendMessage(Mono<Channel> channel, String message) {
 		if (client == null)
 			return null;
@@ -96,6 +104,10 @@ public abstract class Discord_Bot {
 		}
 	}
 
+	public void sendTimedMessageMessageChannel(Mono<MessageChannel> channel, String message, Long delay, TimeUnit timeUnit) {
+		sendTimedMessage(channel.ofType(Channel.class), message, delay, timeUnit);
+	}
+
 	public void sendTimedMessage(Mono<Channel> channel, String message, Long delay, TimeUnit timeUnit) {
 		if (client == null)
 			return;
@@ -110,6 +122,10 @@ public abstract class Discord_Bot {
 		}
 	}
 
+	public void sendTimedMessageMessageChannel(Mono<MessageChannel> channel, String message) {
+		sendTimedMessage(channel.ofType(Channel.class), message);
+	}
+
 	public void sendTimedMessage(Mono<Channel> channel, String message) {
 		if (client == null)
 			return;
@@ -122,6 +138,10 @@ public abstract class Discord_Bot {
 				deleteMessage(channel, lastMessage);
 			}, 1L, TimeUnit.MINUTES);
 		}
+	}
+
+	public void deleteAllMessagesInMessageChannel(Mono<MessageChannel> channel) {
+		deleteAllMessagesInChannel(channel.ofType(Channel.class));
 	}
 
 	public void deleteAllMessagesInChannel(Mono<Channel> channel) {
@@ -197,6 +217,42 @@ public abstract class Discord_Bot {
 			onOutputMessage(MessageType.Error, "Discord: Message could not be edited, error: " + e.getMessage());
 			return null;
 		}
+	}
+
+	public Snowflake getRoleIDByName(String name, Mono<Guild> guild) {
+		return guild.block().getRoles().filter(role -> role.getName().equalsIgnoreCase(name)).blockFirst().getId();
+	}
+
+	public Mono<User> getUserByMemberID(Snowflake messageID) {
+		return getClient().getUserById(messageID);
+	}
+
+	public Mono<User> getUserByMemberID(Optional<Member> member) {
+		return getUserByMemberID(member.get().getId());
+	}
+
+	public Mono<User> getUserByMemberID(Member member) {
+		return getUserByMemberID(member.getId());
+	}
+
+	public String getUserDisplayNameWithoutEmotes(Optional<Member> member) {
+		return getUserDisplayNameWithEmotes(member).replaceAll("[^a-zA-Z0-9_]", "");
+	}
+
+	public String getUserDisplayNameWithEmotes(Optional<Member> member) {
+		return member.get().getDisplayName();
+	}
+
+	public String getUserDisplayNameWithoutEmotes(Member member) {
+		return getUserDisplayNameWithEmotes(member).replaceAll("[^a-zA-Z0-9_]", "");
+	}
+
+	public String getUserDisplayNameWithEmotes(Member member) {
+		return member.getDisplayName();
+	}
+
+	public Mono<Channel> getChannelByID(Snowflake channelID) {
+		return getClient().getChannelById(channelID);
 	}
 
 	public DiscordClient getClient() {

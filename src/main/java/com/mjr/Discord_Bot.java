@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
@@ -204,7 +203,7 @@ public abstract class Discord_Bot {
 		}
 	}
 
-	public Mono<Message> editMessage(Mono<Message> oldMessage, Consumer<MessageEditSpec> newMessage) {
+	public Mono<Message> editMessage(Mono<Message> oldMessage, MessageEditSpec newMessage) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -253,6 +252,22 @@ public abstract class Discord_Bot {
 
 	public Mono<Channel> getChannelByID(Snowflake channelID) {
 		return getClient().getChannelById(channelID);
+	}
+
+	public Mono<Message> getMessageByMessageID(Mono<Channel> channel, Snowflake messageID) {
+		return getMessageByMessageID(channel.block().getId(), messageID);
+	}
+
+	public Mono<Message> getMessageByMessageID(Snowflake channel, Snowflake messageID) {
+		return getClient().getMessageById(channel, messageID);
+	}
+
+	public Mono<Message> getMessageByMessageID(Mono<Channel> channel, Long messageID) {
+		return getMessageByMessageID(channel.block().getId(), Snowflake.of(messageID));
+	}
+
+	public Mono<Message> getMessageByMessageID(Snowflake channel, Long messageID) {
+		return getClient().getMessageById(channel, Snowflake.of(messageID));
 	}
 
 	public DiscordClient getClient() {

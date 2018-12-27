@@ -17,6 +17,7 @@ import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.entity.TextChannel;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
+import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageEditSpec;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -86,6 +87,24 @@ public abstract class Discord_Bot {
 		}
 	}
 
+	private Mono<Message> sendMessage(Mono<Channel> channel, EmbedCreateSpec builder) {
+		if (client == null)
+			return null;
+		if (client.isConnected() == false)
+			return null;
+		onOutputMessage(MessageType.Info, "Discord: Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+		try {
+			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + error.getMessage());
+			});
+			messageReturn.subscribe();
+			return messageReturn;
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + e.getMessage());
+			return null;
+		}
+	}
+
 	public void sendDirectMessageToUser(Mono<User> user, String message) {
 		if (client == null)
 			return;
@@ -105,6 +124,20 @@ public abstract class Discord_Bot {
 
 	public void sendTimedMessageMessageChannel(Mono<MessageChannel> channel, String message, Long delay, TimeUnit timeUnit) {
 		sendTimedMessage(channel.ofType(Channel.class), message, delay, timeUnit);
+	}
+
+	public void sendTimedMessage(Mono<Channel> channel, EmbedCreateSpec builder, long delay, TimeUnit timeUnit) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		onOutputMessage(MessageType.Info, "Discord: Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+		Mono<Message> lastMessage = sendMessage(channel, builder);
+		if (lastMessage != null) {
+			scheduler.schedule(() -> {
+				deleteMessage(channel, lastMessage);
+			}, delay, timeUnit);
+		}
 	}
 
 	public void sendTimedMessage(Mono<Channel> channel, String message, Long delay, TimeUnit timeUnit) {

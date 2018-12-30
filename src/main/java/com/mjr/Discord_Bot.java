@@ -398,15 +398,13 @@ public abstract class Discord_Bot {
 	 * @param newMessage
 	 * @return
 	 */
-	public Mono<Message> editMessage(Mono<Message> oldMessage, MessageEditSpec newMessage) {
+	public Message editMessage(Mono<Message> oldMessage, MessageEditSpec newMessage) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
 			return null;
 		try {
-			oldMessage.block().edit(newMessage);
-			oldMessage.subscribe();
-			return oldMessage;
+			return oldMessage.block().edit(newMessage).block();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Discord: Message could not be edited, error: " + e.getMessage());
 			return null;

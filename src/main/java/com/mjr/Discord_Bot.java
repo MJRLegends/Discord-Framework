@@ -88,6 +88,8 @@ public abstract class Discord_Bot {
 			return null;
 		if (client.isConnected() == false)
 			return null;
+		if(message.length() > 2000)
+			message = message.substring(0, 2000);
 		onOutputMessage(MessageType.Info, "Discord: Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 		try {
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
@@ -150,6 +152,8 @@ public abstract class Discord_Bot {
 			return null;
 		if (client.isConnected() == false)
 			return null;
+		if(message.length() > 2000)
+			message = message.substring(0, 2000);
 		onOutputMessage(MessageType.Info, "Discord: Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 		try {
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
@@ -204,11 +208,13 @@ public abstract class Discord_Bot {
 			return;
 		if (client.isConnected() == false)
 			return;
+		if(message.length() > 2000)
+			message = message.substring(0, 2000);
 		onOutputMessage(MessageType.Info, "Discord: Attempting to send message to User: " + user.block().getUsername() + " Message: " + message);
 		try {
 			user.block().getPrivateChannel().block().createMessage(message).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Discord: Private Message could not be sent, error: " + error.getMessage());
-				onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.block().getUsername());
+				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.block().getUsername());
 			}).subscribe();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Discord: Private Message could not be sent, error: " + e.getMessage());

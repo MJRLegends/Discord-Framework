@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
@@ -107,7 +108,7 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	public Message sendMessageMessageChannel(Mono<MessageChannel> channel, EmbedCreateSpec builder) {
+	public Message sendMessageMessageChannel(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
 		return sendMessage(channel.ofType(Channel.class), builder);
 	}
 
@@ -116,7 +117,7 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	private Message sendMessage(Mono<Channel> channel, EmbedCreateSpec builder) {
+	private Message sendMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -172,7 +173,7 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	public Mono<Message> sendMessageMessageChannelReturnMonoMsg(Mono<MessageChannel> channel, EmbedCreateSpec builder) {
+	public Mono<Message> sendMessageMessageChannelReturnMonoMsg(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
 		return sendMessageReturnMonoMsg(channel.ofType(Channel.class), builder);
 	}
 
@@ -181,7 +182,7 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	private Mono<Message> sendMessageReturnMonoMsg(Mono<Channel> channel, EmbedCreateSpec builder) {
+	private Mono<Message> sendMessageReturnMonoMsg(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -238,7 +239,7 @@ public abstract class Discord_Bot {
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedMessage(Mono<Channel> channel, EmbedCreateSpec builder, long delay, TimeUnit timeUnit) {
+	public void sendTimedMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder, long delay, TimeUnit timeUnit) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
@@ -248,7 +249,7 @@ public abstract class Discord_Bot {
 			Message lastMessage = sendMessage(channel, builder);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
-					deleteMessage(lastMessage);
+					deleteMessage(lastMessage, "Timed Message Delete");
 				}, delay, timeUnit);
 			}
 		} catch (Exception e) {
@@ -272,7 +273,7 @@ public abstract class Discord_Bot {
 			Message lastMessage = sendMessage(channel, message);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
-					deleteMessage(lastMessage);
+					deleteMessage(lastMessage, "Timed Message Delete");
 				}, delay, timeUnit);
 			}
 		} catch (Exception e) {
@@ -302,7 +303,7 @@ public abstract class Discord_Bot {
 			Message lastMessage = sendMessage(channel, message);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
-					deleteMessage(lastMessage);
+					deleteMessage(lastMessage, "Timed Message Delete");
 				}, 1L, TimeUnit.MINUTES);
 			}
 		} catch (Exception e) {
@@ -344,14 +345,14 @@ public abstract class Discord_Bot {
 	/**
 	 * @param message
 	 */
-	public void deleteMessage(Mono<Message> message) {
+	public void deleteMessage(Mono<Message> message, String reason) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
 		try {
 			onOutputMessage(MessageType.Info, "Discord: Deleting message with id: " + message.block().getId() + " from " + message.block().getChannel().ofType(TextChannel.class).block().getName());
-			message.block().delete().doOnError(error -> {
+			message.block().delete(reason).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Discord: Message could not be deleted, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.block().getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
 			}).subscribe();
@@ -364,14 +365,14 @@ public abstract class Discord_Bot {
 	/**
 	 * @param message
 	 */
-	public void deleteMessage(Message message) {
+	public void deleteMessage(Message message, String reason) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
 		try {
 			onOutputMessage(MessageType.Info, "Discord: Deleting message with id: " + message.getId() + " from " + message.getChannel().ofType(TextChannel.class).block().getName());
-			message.delete().doOnError(error -> {
+			message.delete(reason).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Discord: Message could not be deleted, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
 			}).subscribe();
@@ -385,13 +386,13 @@ public abstract class Discord_Bot {
 	 * @param channel
 	 * @param messageID
 	 */
-	public void deleteMessage(Mono<Channel> channel, Snowflake messageID) {
+	public void deleteMessage(Mono<Channel> channel, Snowflake messageID, String reason) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
 		try {
-			deleteMessage(channel, client.getMessageById(channel.block().getId(), messageID));
+			deleteMessage(channel, client.getMessageById(channel.block().getId(), messageID), reason);
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Discord: Message could not be deleted, error: " + e.getMessage());
 			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
@@ -402,14 +403,14 @@ public abstract class Discord_Bot {
 	 * @param channel
 	 * @param message
 	 */
-	public void deleteMessage(Mono<Channel> channel, Mono<Message> message) {
+	public void deleteMessage(Mono<Channel> channel, Mono<Message> message, String reason) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
 		try {
 			onOutputMessage(MessageType.Info, "Discord: Deleting message with id: " + message.block().getId() + " from " + channel.ofType(TextChannel.class).block().getName());
-			channel.ofType(TextChannel.class).block().getMessageById(message.block().getId()).block().delete().subscribe();
+			channel.ofType(TextChannel.class).block().getMessageById(message.block().getId()).block().delete(reason).subscribe();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Discord: Message could not be deleted, error: " + e.getMessage());
 			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
@@ -421,13 +422,31 @@ public abstract class Discord_Bot {
 	 * @param newMessage
 	 * @return
 	 */
-	public Message editMessage(Mono<Message> oldMessage, MessageEditSpec newMessage) {
+	public Message editMessage(Mono<Message> oldMessage, Consumer<MessageEditSpec> newMessage) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
 			return null;
 		try {
 			return oldMessage.block().edit(newMessage).block();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Discord: Message could not be edited, error: " + e.getMessage());
+			return null;
+		}
+	}
+	
+	/**
+	 * @param oldMessage
+	 * @param content
+	 * @return
+	 */
+	public Message editMessage(Mono<Message> oldMessage, final String content) {
+		if (client == null)
+			return null;
+		if (client.isConnected() == false)
+			return null;
+		try {
+			return oldMessage.block().edit(spec -> spec.setContent(content)).block();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Discord: Message could not be edited, error: " + e.getMessage());
 			return null;

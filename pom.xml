@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mjr.discordframework</groupId>
   <artifactId>Discord-Framework</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.7</version>
 <repositories>
       <!--For anything on github -->
       <repository>
@@ -14,7 +14,7 @@
       <dependency>
 		 <groupId>com.discord4j.discord4j</groupId>
 		 <artifactId>discord4j-core</artifactId>
-		 <version>f947316</version>
+		 <version>be4d32b</version>
       </dependency>
    </dependencies>
     <build>

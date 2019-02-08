@@ -1,4 +1,4 @@
-package com.mjr;
+package com.mjr.discordframework;
 
 import java.util.Optional;
 
@@ -11,13 +11,13 @@ import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
 
-public class Utilities {
+public class DiscordBotUtilities {
 	/**
 	 * @param name
 	 * @param guild
 	 * @return
 	 */
-	public Snowflake getRoleIDByName(String name, Mono<Guild> guild) {
+	public static Snowflake getRoleIDByName(String name, Mono<Guild> guild) {
 		return guild.block().getRoles().filter(role -> role.getName().equalsIgnoreCase(name)).blockFirst().getId();
 	}
 
@@ -25,7 +25,7 @@ public class Utilities {
 	 * @param messageID
 	 * @return
 	 */
-	public Mono<User> getUserByMemberID(DiscordClient client, Snowflake messageID) {
+	public static Mono<User> getUserByMemberID(DiscordClient client, Snowflake messageID) {
 		return client.getUserById(messageID);
 	}
 
@@ -33,7 +33,7 @@ public class Utilities {
 	 * @param member
 	 * @return
 	 */
-	public Mono<User> getUserByMemberID(DiscordClient client, Optional<Member> member) {
+	public static Mono<User> getUserByMemberID(DiscordClient client, Optional<Member> member) {
 		return getUserByMemberID(client, member.get().getId());
 	}
 
@@ -41,7 +41,7 @@ public class Utilities {
 	 * @param member
 	 * @return
 	 */
-	public Mono<User> getUserByMemberID(DiscordClient client, Member member) {
+	public static Mono<User> getUserByMemberID(DiscordClient client, Member member) {
 		return getUserByMemberID(client, member.getId());
 	}
 
@@ -49,7 +49,7 @@ public class Utilities {
 	 * @param member
 	 * @return
 	 */
-	public String getUserDisplayNameWithoutEmotes(Optional<Member> member) {
+	public static String getUserDisplayNameWithoutEmotes(Optional<Member> member) {
 		return getUserDisplayNameWithEmotes(member).replaceAll("[^a-zA-Z0-9_]", "");
 	}
 
@@ -57,7 +57,7 @@ public class Utilities {
 	 * @param member
 	 * @return
 	 */
-	public String getUserDisplayNameWithEmotes(Optional<Member> member) {
+	public static String getUserDisplayNameWithEmotes(Optional<Member> member) {
 		return member.get().getDisplayName();
 	}
 
@@ -65,7 +65,7 @@ public class Utilities {
 	 * @param member
 	 * @return
 	 */
-	public String getUserDisplayNameWithoutEmotes(Member member) {
+	public static String getUserDisplayNameWithoutEmotes(Member member) {
 		return getUserDisplayNameWithEmotes(member).replaceAll("[^a-zA-Z0-9_]", "");
 	}
 
@@ -73,7 +73,7 @@ public class Utilities {
 	 * @param member
 	 * @return
 	 */
-	public String getUserDisplayNameWithEmotes(Member member) {
+	public static String getUserDisplayNameWithEmotes(Member member) {
 		return member.getDisplayName();
 	}
 
@@ -81,7 +81,7 @@ public class Utilities {
 	 * @param channelID
 	 * @return
 	 */
-	public Mono<Channel> getChannelByID(DiscordClient client, Snowflake channelID) {
+	public static Mono<Channel> getChannelByID(DiscordClient client, Snowflake channelID) {
 		return client.getChannelById(channelID);
 	}
 
@@ -90,7 +90,7 @@ public class Utilities {
 	 * @param messageID
 	 * @return
 	 */
-	public Mono<Message> getMessageByMessageID(DiscordClient client, Mono<Channel> channel, Snowflake messageID) {
+	public static Mono<Message> getMessageByMessageID(DiscordClient client, Mono<Channel> channel, Snowflake messageID) {
 		return getMessageByMessageID(client, channel.block().getId(), messageID);
 	}
 
@@ -99,7 +99,7 @@ public class Utilities {
 	 * @param messageID
 	 * @return
 	 */
-	public Mono<Message> getMessageByMessageID(DiscordClient client, Snowflake channel, Snowflake messageID) {
+	public static Mono<Message> getMessageByMessageID(DiscordClient client, Snowflake channel, Snowflake messageID) {
 		return client.getMessageById(channel, messageID);
 	}
 
@@ -108,7 +108,7 @@ public class Utilities {
 	 * @param messageID
 	 * @return
 	 */
-	public Mono<Message> getMessageByMessageID(DiscordClient client, Mono<Channel> channel, Long messageID) {
+	public static Mono<Message> getMessageByMessageID(DiscordClient client, Mono<Channel> channel, Long messageID) {
 		return getMessageByMessageID(client, channel.block().getId(), Snowflake.of(messageID));
 	}
 
@@ -117,7 +117,7 @@ public class Utilities {
 	 * @param messageID
 	 * @return
 	 */
-	public Mono<Message> getMessageByMessageID(DiscordClient client, Snowflake channel, Long messageID) {
+	public static Mono<Message> getMessageByMessageID(DiscordClient client, Snowflake channel, Long messageID) {
 		return client.getMessageById(channel, Snowflake.of(messageID));
 	}
 }

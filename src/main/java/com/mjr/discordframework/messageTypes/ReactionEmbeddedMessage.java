@@ -1,31 +1,33 @@
-package com.mjr.messageTypes;
+package com.mjr.discordframework.messageTypes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.event.domain.message.ReactionRemoveEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.core.object.util.Snowflake;
+import discord4j.core.spec.EmbedCreateSpec;
 import reactor.core.publisher.Mono;
 
-public class ReactionMessage extends ReactionMessageBase {
+public class ReactionEmbeddedMessage extends ReactionMessageBase {
 
 	List<String> reactions = new ArrayList<String>();
-	private String message;
+	private Consumer<EmbedCreateSpec> message;
 
-	public ReactionMessage(String message, List<String> reactions) {
+	public ReactionEmbeddedMessage(Consumer<EmbedCreateSpec> message, List<String> reactions) {
 		super();
 		this.message = message;
 		this.reactions = reactions;
 	}
 
-	public String getMessage() {
+	public Consumer<EmbedCreateSpec> getMessage() {
 		return message;
 	}
 
-	public void setMessage(String message) {
+	public void setMessage(Consumer<EmbedCreateSpec> message) {
 		this.message = message;
 	}
 

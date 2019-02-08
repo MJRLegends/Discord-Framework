@@ -1,10 +1,10 @@
-package com.mjr;
+package com.mjr.discordframework;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.mjr.messageTypes.ReactionEmbeddedMessage;
-import com.mjr.messageTypes.ReactionMessage;
+import com.mjr.discordframework.messageTypes.ReactionEmbeddedMessage;
+import com.mjr.discordframework.messageTypes.ReactionMessage;
 
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.util.Snowflake;

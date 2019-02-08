@@ -1,4 +1,4 @@
-package com.mjr;
+package com.mjr.discordframework;
 
 import java.time.Instant;
 import java.util.concurrent.Executors;
@@ -6,8 +6,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import com.mjr.messageTypes.ReactionEmbeddedMessage;
-import com.mjr.messageTypes.ReactionMessage;
+import com.mjr.discordframework.messageTypes.ReactionEmbeddedMessage;
+import com.mjr.discordframework.messageTypes.ReactionMessage;
 
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;

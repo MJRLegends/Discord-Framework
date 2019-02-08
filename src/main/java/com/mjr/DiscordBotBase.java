@@ -26,7 +26,7 @@ import discord4j.core.spec.MessageEditSpec;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public abstract class Discord_Bot {
+public abstract class DiscordBotBase {
 
 	public enum MessageType {
 		Info("Info"), Error("Error");
@@ -47,7 +47,7 @@ public abstract class Discord_Bot {
 	private EventDispatcher dispatcher;
 	private ReactionMessageManager reactionMessageManager;
 
-	public Discord_Bot(String token) {
+	public DiscordBotBase(String token) {
 		super();
 		if (token.length() == 0) {
 			onOutputMessage(MessageType.Error, "Missing Discord oAuth Token!");

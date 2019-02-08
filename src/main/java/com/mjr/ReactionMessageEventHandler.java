@@ -6,7 +6,7 @@ import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.event.domain.message.ReactionRemoveEvent;
 
 public class ReactionMessageEventHandler {
-	public static void onMessageReactionAddReceivedEvent(ReactionAddEvent event, Discord_Bot bot) {
+	public static void onMessageReactionAddReceivedEvent(ReactionAddEvent event, DiscordBotBase bot) {
 		if (event.getUser().block().isBot())
 			return;
 		ReactionMessage msg = bot.getReactionMessageManager().getReactionMessageByMessageID(event.getMessageId());
@@ -19,7 +19,7 @@ public class ReactionMessageEventHandler {
 		}
 	}
 
-	public static void onMessageReactionRemoveReceivedEvent(ReactionRemoveEvent event, Discord_Bot bot) {
+	public static void onMessageReactionRemoveReceivedEvent(ReactionRemoveEvent event, DiscordBotBase bot) {
 		if (event.getUser().block().isBot())
 			return;
 		ReactionMessage msg = bot.getReactionMessageManager().getReactionMessageByMessageID(event.getMessageId());

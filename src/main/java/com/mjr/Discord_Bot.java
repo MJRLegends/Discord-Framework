@@ -1,22 +1,27 @@
 package com.mjr;
 
 import java.time.Instant;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import com.mjr.messageTypes.ReactionEmbeddedMessage;
+import com.mjr.messageTypes.ReactionMessage;
+
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.EventDispatcher;
+import discord4j.core.event.domain.message.ReactionAddEvent;
+import discord4j.core.event.domain.message.ReactionRemoveEvent;
 import discord4j.core.object.entity.Channel;
-import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.entity.TextChannel;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.core.object.util.Snowflake;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageEditSpec;
@@ -42,6 +47,8 @@ public abstract class Discord_Bot {
 	private DiscordClient client;
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
 	private EventDispatcher dispatcher;
+	private Map<Message, ReactionMessage> reactionMessages = new HashMap<Message, ReactionMessage>();
+	private Map<Message, ReactionEmbeddedMessage> reactionEmbeddedMessages = new HashMap<Message, ReactionEmbeddedMessage>();
 
 	public Discord_Bot(String token) {
 		super();
@@ -52,6 +59,10 @@ public abstract class Discord_Bot {
 		onOutputMessage(MessageType.Info, "Starting Discord bot");
 		this.client = connectClient(token);
 		this.dispatcher = client.getEventDispatcher();
+		this.dispatcher.on(ReactionAddEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing ReactionAddEvent Error: " + t.getMessage()))
+				.subscribe(o -> ReactionMessageEventHandler.onMessageReactionAddReceivedEvent(o, this));
+		this.dispatcher.on(ReactionRemoveEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing ReactionRemoveEvent Error: " + t.getMessage()))
+				.subscribe(o -> ReactionMessageEventHandler.onMessageReactionRemoveReceivedEvent(o, this));
 		onOutputMessage(MessageType.Info, "Finshed starting Discord bot");
 	}
 
@@ -108,8 +119,8 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	public Message sendMessageMessageChannel(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
-		return sendMessage(channel.ofType(Channel.class), builder);
+	public Message sendEmbeddedMessageMessageChannel(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+		return sendEmbeddedMessage(channel.ofType(Channel.class), builder);
 	}
 
 	/**
@@ -117,7 +128,7 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	private Message sendMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
+	private Message sendEmbeddedMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -173,8 +184,8 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	public Mono<Message> sendMessageMessageChannelReturnMonoMsg(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
-		return sendMessageReturnMonoMsg(channel.ofType(Channel.class), builder);
+	public Mono<Message> sendEmbeddedMessageMessageChannelReturnMonoMsg(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+		return sendEmbeddedMessageReturnMonoMsg(channel.ofType(Channel.class), builder);
 	}
 
 	/**
@@ -182,7 +193,7 @@ public abstract class Discord_Bot {
 	 * @param builder
 	 * @return
 	 */
-	private Mono<Message> sendMessageReturnMonoMsg(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
+	private Mono<Message> sendEmbeddedMessageReturnMonoMsg(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -246,7 +257,7 @@ public abstract class Discord_Bot {
 			return;
 		try {
 			onOutputMessage(MessageType.Info, "Discord: Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
-			Message lastMessage = sendMessage(channel, builder);
+			Message lastMessage = sendEmbeddedMessage(channel, builder);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
 					deleteMessage(lastMessage, "Timed Message Delete");
@@ -309,6 +320,75 @@ public abstract class Discord_Bot {
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Discord: Timed Message could not be sent, error: " + e.getMessage());
 		}
+	}
+
+	/**
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
+	public void sendReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		String message = reactionMessage.getMessage();
+		if (message.length() > 2000)
+			message = message.substring(0, 2000);
+		try {
+			onOutputMessage(MessageType.Info, "Discord: Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + error.getMessage());
+			});
+			Message temp = messageReturn.block();
+			for(String reactionDefault : reactionMessage.getReactions())
+				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
+			this.addReactionMessage(temp, reactionMessage);
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + e.getMessage());
+			return;
+		}
+	}
+	
+	
+	/**
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
+	public void sendReactionMessageMessageChannel(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
+		sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
+	}
+	
+	/**
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
+	public void sendReactionEmbeddedMessage(ReactionEmbeddedMessage reactionMessage, Mono<Channel> channel) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		try {
+			Message temp = sendEmbeddedMessage(channel, reactionMessage.getMessage());
+			for(String reactionDefault : reactionMessage.getReactions())
+				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
+			this.addReactionEmbeddedMessage(temp, reactionMessage);
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Discord: Message could not be sent, error: " + e.getMessage());
+			return;
+		}
+	}
+	
+	
+	/**
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
+	public void sendReactionEmbeddedMessageMessageChannel(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
+		sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
 	}
 
 	/**
@@ -434,7 +514,7 @@ public abstract class Discord_Bot {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @param oldMessage
 	 * @param content
@@ -454,115 +534,6 @@ public abstract class Discord_Bot {
 	}
 
 	/**
-	 * @param name
-	 * @param guild
-	 * @return
-	 */
-	public Snowflake getRoleIDByName(String name, Mono<Guild> guild) {
-		return guild.block().getRoles().filter(role -> role.getName().equalsIgnoreCase(name)).blockFirst().getId();
-	}
-
-	/**
-	 * @param messageID
-	 * @return
-	 */
-	public Mono<User> getUserByMemberID(Snowflake messageID) {
-		return getClient().getUserById(messageID);
-	}
-
-	/**
-	 * @param member
-	 * @return
-	 */
-	public Mono<User> getUserByMemberID(Optional<Member> member) {
-		return getUserByMemberID(member.get().getId());
-	}
-
-	/**
-	 * @param member
-	 * @return
-	 */
-	public Mono<User> getUserByMemberID(Member member) {
-		return getUserByMemberID(member.getId());
-	}
-
-	/**
-	 * @param member
-	 * @return
-	 */
-	public String getUserDisplayNameWithoutEmotes(Optional<Member> member) {
-		return getUserDisplayNameWithEmotes(member).replaceAll("[^a-zA-Z0-9_]", "");
-	}
-
-	/**
-	 * @param member
-	 * @return
-	 */
-	public String getUserDisplayNameWithEmotes(Optional<Member> member) {
-		return member.get().getDisplayName();
-	}
-
-	/**
-	 * @param member
-	 * @return
-	 */
-	public String getUserDisplayNameWithoutEmotes(Member member) {
-		return getUserDisplayNameWithEmotes(member).replaceAll("[^a-zA-Z0-9_]", "");
-	}
-
-	/**
-	 * @param member
-	 * @return
-	 */
-	public String getUserDisplayNameWithEmotes(Member member) {
-		return member.getDisplayName();
-	}
-
-	/**
-	 * @param channelID
-	 * @return
-	 */
-	public Mono<Channel> getChannelByID(Snowflake channelID) {
-		return getClient().getChannelById(channelID);
-	}
-
-	/**
-	 * @param channel
-	 * @param messageID
-	 * @return
-	 */
-	public Mono<Message> getMessageByMessageID(Mono<Channel> channel, Snowflake messageID) {
-		return getMessageByMessageID(channel.block().getId(), messageID);
-	}
-
-	/**
-	 * @param channel
-	 * @param messageID
-	 * @return
-	 */
-	public Mono<Message> getMessageByMessageID(Snowflake channel, Snowflake messageID) {
-		return getClient().getMessageById(channel, messageID);
-	}
-
-	/**
-	 * @param channel
-	 * @param messageID
-	 * @return
-	 */
-	public Mono<Message> getMessageByMessageID(Mono<Channel> channel, Long messageID) {
-		return getMessageByMessageID(channel.block().getId(), Snowflake.of(messageID));
-	}
-
-	/**
-	 * @param channel
-	 * @param messageID
-	 * @return
-	 */
-	public Mono<Message> getMessageByMessageID(Snowflake channel, Long messageID) {
-		return getClient().getMessageById(channel, Snowflake.of(messageID));
-	}
-
-	/**
 	 * @return
 	 */
 	public DiscordClient getClient() {
@@ -574,6 +545,50 @@ public abstract class Discord_Bot {
 	 */
 	public EventDispatcher getDispatcher() {
 		return dispatcher;
+	}
+
+	public Map<Message, ReactionMessage> getReactionMessages() {
+		return reactionMessages;
+	}
+
+	public ReactionMessage getReactionMessageByMessageID(Snowflake messageID) {
+		for (Message message : reactionMessages.keySet()) {
+			if (message.getId().equals(messageID))
+				return reactionMessages.get(message);
+		}
+		return null;
+	}
+
+	public ReactionMessage getReactionMessageByMessageID(Long messageID) {
+		for (Message message : reactionMessages.keySet()) {
+			if (message.getId().asLong() == messageID)
+				return reactionMessages.get(message);
+		}
+		return null;
+	}
+
+	public void setReactionMessages(Map<Message, ReactionMessage> reactionMessages) {
+		this.reactionMessages = reactionMessages;
+	}
+
+	public void addReactionMessage(Message message, ReactionMessage reactionMessage) {
+		this.reactionMessages.put(message, reactionMessage);
+	}
+
+	public void removeReactionMessage(Message message) {
+		this.reactionMessages.remove(message);
+	}
+	
+	public void setReactionEmbeddedMessages(Map<Message, ReactionEmbeddedMessage> reactionEmbeddedMessages) {
+		this.reactionEmbeddedMessages = reactionEmbeddedMessages;
+	}
+
+	public void addReactionEmbeddedMessage(Message message, ReactionEmbeddedMessage reactionMessage) {
+		this.reactionEmbeddedMessages.put(message, reactionMessage);
+	}
+
+	public void removeReactionEmbeddedMessage(Message message) {
+		this.reactionEmbeddedMessages.remove(message);
 	}
 
 	public abstract void onOutputMessage(MessageType type, String message);

@@ -9,7 +9,7 @@ public class ReactionMessageEventHandler {
 	public static void onMessageReactionAddReceivedEvent(ReactionAddEvent event, Discord_Bot bot) {
 		if (event.getUser().block().isBot())
 			return;
-		ReactionMessage msg = bot.getReactionMessageByMessageID(event.getMessageId());
+		ReactionMessage msg = bot.getReactionMessageManager().getReactionMessageByMessageID(event.getMessageId());
 		if (msg != null) {
 			if (msg.getReactions().contains(event.getEmoji().asUnicodeEmoji().get().toString())) {
 				msg.removeAllReactionsForUser(event.getMessage(), event.getUserId());
@@ -22,7 +22,7 @@ public class ReactionMessageEventHandler {
 	public static void onMessageReactionRemoveReceivedEvent(ReactionRemoveEvent event, Discord_Bot bot) {
 		if (event.getUser().block().isBot())
 			return;
-		ReactionMessage msg = bot.getReactionMessageByMessageID(event.getMessageId());
+		ReactionMessage msg = bot.getReactionMessageManager().getReactionMessageByMessageID(event.getMessageId());
 		if (msg != null) {
 			if (msg.getReactions().contains(event.getEmoji().asUnicodeEmoji().get().toString())) {
 				msg.removeAllReactionsForUser(event.getMessage(), event.getUserId());

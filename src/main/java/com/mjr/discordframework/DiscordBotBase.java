@@ -108,7 +108,7 @@ public abstract class DiscordBotBase {
 		if (message.length() > 2000)
 			message = message.substring(0, 2000);
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
 			});
@@ -141,7 +141,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return null;
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
 			});
@@ -176,7 +176,7 @@ public abstract class DiscordBotBase {
 		if (message.length() > 2000)
 			message = message.substring(0, 2000);
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
 			});
@@ -210,7 +210,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return null;
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
 			});
@@ -235,7 +235,7 @@ public abstract class DiscordBotBase {
 		if (message.length() > 2000)
 			message = message.substring(0, 2000);
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send message to User: " + user.block().getUsername() + " Message: " + message);
+			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.block().getUsername() + " Message: " + message);
 			user.block().getPrivateChannel().block().createMessage(message).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.block().getUsername());
@@ -270,7 +270,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
 			Message lastMessage = sendEmbeddedMessage(channel, builder);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
@@ -295,7 +295,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Message lastMessage = sendMessage(channel, message);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
@@ -327,7 +327,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Message lastMessage = sendMessage(channel, message);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
@@ -354,7 +354,7 @@ public abstract class DiscordBotBase {
 		if (message.length() > 2000)
 			message = message.substring(0, 2000);
 		try {
-			onOutputMessage(MessageType.Error, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
 			});
@@ -429,7 +429,7 @@ public abstract class DiscordBotBase {
 			return;
 		try {
 			TextChannel textChannel = channel.ofType(TextChannel.class).block();
-			onOutputMessage(MessageType.Error, "Attempting to run a nuke of all messages on Channel: " + channel.ofType(TextChannel.class).block().getName());
+			onOutputMessage(MessageType.Info, "Attempting to run a nuke of all messages on Channel: " + channel.ofType(TextChannel.class).block().getName());
 			Flux<Message> messages = textChannel.getMessagesBefore(Snowflake.of(Instant.now()));
 			for (Message message : messages.toIterable()) {
 				message.delete().doOnError(error -> {
@@ -453,7 +453,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Error, "Deleting message with id: " + message.block().getId() + " from " + message.block().getChannel().ofType(TextChannel.class).block().getName());
+			onOutputMessage(MessageType.Info, "Deleting message with id: " + message.block().getId() + " from " + message.block().getChannel().ofType(TextChannel.class).block().getName());
 			message.block().delete(reason).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.block().getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
@@ -474,7 +474,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Error, "Deleting message with id: " + message.getId() + " from " + message.getChannel().ofType(TextChannel.class).block().getName());
+			onOutputMessage(MessageType.Info, "Deleting message with id: " + message.getId() + " from " + message.getChannel().ofType(TextChannel.class).block().getName());
 			message.delete(reason).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
@@ -514,7 +514,7 @@ public abstract class DiscordBotBase {
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Error, "Deleting message with id: " + message.block().getId() + " from " + channel.ofType(TextChannel.class).block().getName());
+			onOutputMessage(MessageType.Info, "Deleting message with id: " + message.block().getId() + " from " + channel.ofType(TextChannel.class).block().getName());
 			channel.ofType(TextChannel.class).block().getMessageById(message.block().getId()).block().delete(reason).subscribe();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + e.getMessage());

@@ -49,6 +49,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Setup Discord Bot instance, make sure to call {@link #setupEvents()} after creating your instance
+	 * 
 	 * @param token
 	 */
 	public DiscordBotBase(String token) {
@@ -70,6 +71,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Used locally to create a client connection
+	 * 
 	 * @param token
 	 * @return
 	 */
@@ -86,6 +88,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message to a channel, returns a Message object
+	 * 
 	 * @param channel
 	 * @param message
 	 * @return
@@ -96,6 +99,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message to a channel, returns a Message object
+	 * 
 	 * @param channel
 	 * @param message
 	 * @return
@@ -121,6 +125,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a embedded message to a channel, returns a Message object
+	 * 
 	 * @param channel
 	 * @param builder
 	 * @return
@@ -131,6 +136,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a embedded message to a channel, returns a Message object
+	 * 
 	 * @param channel
 	 * @param builder
 	 * @return
@@ -154,6 +160,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message to a channel, returns a Mono<Message> object
+	 * 
 	 * @param channel
 	 * @param message
 	 * @return
@@ -164,6 +171,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message to a channel, returns a Mono<Message> object
+	 * 
 	 * @param channel
 	 * @param message
 	 * @return
@@ -190,6 +198,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a embedded message to a channel, returns a Mono<Message> object
+	 * 
 	 * @param channel
 	 * @param builder
 	 * @return
@@ -200,6 +209,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a embedded message to a channel, returns a Mono<Message> object
+	 * 
 	 * @param channel
 	 * @param builder
 	 * @return
@@ -224,6 +234,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a private message to a user
+	 * 
 	 * @param user
 	 * @param message
 	 */
@@ -248,6 +259,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a timed message to a channel
+	 * 
 	 * @param channel
 	 * @param message
 	 * @param delay
@@ -259,6 +271,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a timed embedded message to a channel
+	 * 
 	 * @param channel
 	 * @param builder
 	 * @param delay
@@ -283,7 +296,34 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
+	 * Send a timed embedded message to a channel
+	 * 
+	 * @param channel
+	 * @param builder
+	 * @param delay
+	 * @param timeUnit
+	 */
+	public void sendTimedEmbeddedMessageMessageChannel(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, long delay, TimeUnit timeUnit) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		try {
+			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+			Message lastMessage = sendEmbeddedMessageMessageChannel(channel, builder);
+			if (lastMessage != null) {
+				scheduler.schedule(() -> {
+					deleteMessage(lastMessage, "Timed Message Delete");
+				}, delay, timeUnit);
+			}
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Timed Message could not be sent, error: " + e.getMessage());
+		}
+	}
+
+	/**
 	 * Send a timed message to a channel
+	 * 
 	 * @param channel
 	 * @param message
 	 * @param delay
@@ -309,6 +349,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a timed message to a channel
+	 * 
 	 * @param channel
 	 * @param message
 	 */
@@ -318,6 +359,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a timed message to a channel
+	 * 
 	 * @param channel
 	 * @param message
 	 */
@@ -341,6 +383,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message with reactions functions to a channel
+	 * 
 	 * @param reactionMessage
 	 * @param channel
 	 * @return
@@ -370,6 +413,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message with reactions functions to a channel
+	 * 
 	 * @param reactionMessage
 	 * @param channel
 	 * @return
@@ -380,6 +424,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message with reactions functions to a channel
+	 * 
 	 * @param reactionMessage
 	 * @param channel
 	 * @return
@@ -402,6 +447,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Send a message with reactions functions to a channel
+	 * 
 	 * @param reactionMessage
 	 * @param channel
 	 * @return
@@ -412,6 +458,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Delete all messages from a channel
+	 * 
 	 * @param channel
 	 */
 	public void deleteAllMessagesInMessageChannel(Mono<MessageChannel> channel) {
@@ -420,6 +467,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Delete all messages from a channel
+	 * 
 	 * @param channel
 	 */
 	public void deleteAllMessagesInChannel(Mono<Channel> channel) {
@@ -445,6 +493,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Delete a message from a channel
+	 * 
 	 * @param message
 	 */
 	public void deleteMessage(Mono<Message> message, String reason) {
@@ -466,6 +515,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Delete a message from a channel
+	 * 
 	 * @param message
 	 */
 	public void deleteMessage(Message message, String reason) {
@@ -487,6 +537,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Delete a message from a channel
+	 * 
 	 * @param channel
 	 * @param messageID
 	 */
@@ -505,6 +556,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Delete a message from a channel
+	 * 
 	 * @param channel
 	 * @param message
 	 */
@@ -524,6 +576,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Edit a already sent message
+	 * 
 	 * @param oldMessage
 	 * @param newMessage
 	 * @return
@@ -543,6 +596,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Edit a already sent message
+	 * 
 	 * @param oldMessage
 	 * @param content
 	 * @return
@@ -562,6 +616,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Gets the instance of the bot's DiscordClient object
+	 * 
 	 * @return
 	 */
 	public DiscordClient getClient() {
@@ -570,6 +625,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Gets the instance of the bot's Dispatcher object
+	 * 
 	 * @return
 	 */
 	public EventDispatcher getDispatcher() {
@@ -578,6 +634,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Gets the instance of the bot's ReactionMessageManager object
+	 * 
 	 * @return
 	 */
 	public ReactionMessageManager getReactionMessageManager() {
@@ -586,6 +643,7 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Gets the instance of the bot's ReactionMessageManager object
+	 * 
 	 * @param reactionMessageManager
 	 */
 	public void setReactionMessageManager(ReactionMessageManager reactionMessageManager) {
@@ -594,14 +652,14 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Gets called when the internal code creates an output
+	 * 
 	 * @param type
 	 * @param message
 	 */
 	public abstract void onOutputMessage(MessageType type, String message);
 
 	/**
-	 * Should be used to register events using {@link #getDispatcher()}.on()
-	 * Must be called after creating your bot instance
+	 * Should be used to register events using {@link #getDispatcher()}.on() Must be called after creating your bot instance
 	 */
 	public abstract void setupEvents();
 }

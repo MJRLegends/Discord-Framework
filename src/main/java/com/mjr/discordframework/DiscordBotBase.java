@@ -12,6 +12,7 @@ import com.mjr.discordframework.messageTypes.ReactionMessage;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.EventDispatcher;
+import discord4j.core.event.domain.message.MessageDeleteEvent;
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.event.domain.message.ReactionRemoveEvent;
 import discord4j.core.object.entity.Channel;
@@ -66,6 +67,8 @@ public abstract class DiscordBotBase {
 				.subscribe(o -> ReactionMessageEventHandler.onMessageReactionAddReceivedEvent(o, this));
 		this.dispatcher.on(ReactionRemoveEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing ReactionRemoveEvent Error: " + t.getMessage()))
 				.subscribe(o -> ReactionMessageEventHandler.onMessageReactionRemoveReceivedEvent(o, this));
+		this.dispatcher.on(MessageDeleteEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing MessageDeleteEvent Error: " + t.getMessage()))
+		.subscribe(o -> GlobalEventHandler.onMessageDelete(o, this));
 		onOutputMessage(MessageType.Info, "Discord Bot has been fully started");
 	}
 
@@ -483,7 +486,8 @@ public abstract class DiscordBotBase {
 				message.delete().doOnError(error -> {
 					onOutputMessage(MessageType.Error, "Channel could not be nuked of messages due to: " + error.getMessage());
 					onOutputMessage(MessageType.Error, ":warning: unable to nuke all messages from " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-				}).subscribe();
+				}).block();
+				this.getReactionMessageManager().removeEmbeddedMessage(message);
 			}
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Channel could not be nuked of messages due to: " + e.getMessage());
@@ -506,7 +510,8 @@ public abstract class DiscordBotBase {
 			message.block().delete(reason).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.block().getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-			}).subscribe();
+			}).block();
+			this.getReactionMessageManager().removeEmbeddedMessage(message.block());
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + e.getMessage());
 			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.block().getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
@@ -528,7 +533,8 @@ public abstract class DiscordBotBase {
 			message.delete(reason).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + error.getMessage());
 				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-			}).subscribe();
+			}).block();
+			this.getReactionMessageManager().removeEmbeddedMessage(message);
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + e.getMessage());
 			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
@@ -567,7 +573,8 @@ public abstract class DiscordBotBase {
 			return;
 		try {
 			onOutputMessage(MessageType.Info, "Deleting message with id: " + message.block().getId() + " from " + channel.ofType(TextChannel.class).block().getName());
-			channel.ofType(TextChannel.class).block().getMessageById(message.block().getId()).block().delete(reason).subscribe();
+			channel.ofType(TextChannel.class).block().getMessageById(message.block().getId()).block().delete(reason).block();
+			this.getReactionMessageManager().removeEmbeddedMessage(message.block());
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + e.getMessage());
 			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");

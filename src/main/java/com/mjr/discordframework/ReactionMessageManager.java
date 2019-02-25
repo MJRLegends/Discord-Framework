@@ -17,6 +17,10 @@ public class ReactionMessageManager {
 		return reactionMessages;
 	}
 
+	public Map<Message, ReactionEmbeddedMessage> getReactionEmbeddedMessages() {
+		return reactionEmbeddedMessages;
+	}
+
 	public ReactionMessage getReactionMessageByMessageID(Snowflake messageID) {
 		for (Message message : reactionMessages.keySet()) {
 			if (message.getId().equals(messageID))
@@ -57,7 +61,7 @@ public class ReactionMessageManager {
 		this.reactionMessages.put(message, reactionMessage);
 	}
 
-	public void removeReactionMessage(Message message) {
+	private void removeReactionMessage(Message message) {
 		this.reactionMessages.remove(message);
 	}
 
@@ -69,8 +73,22 @@ public class ReactionMessageManager {
 		this.reactionEmbeddedMessages.put(message, reactionMessage);
 	}
 
-	public void removeReactionEmbeddedMessage(Message message) {
+	private void removeReactionEmbeddedMessage(Message message) {
 		this.reactionEmbeddedMessages.remove(message);
 	}
 
+	public void removeEmbeddedMessage(Message message) {
+		removeEmbeddedMessage(message.getId());
+	}
+
+	public void removeEmbeddedMessage(Snowflake messageID) {
+		for (Message msg : this.reactionMessages.keySet()) {
+			if (msg.getId().asLong() == messageID.asLong())
+				removeReactionMessage(msg);
+		}
+		for (Message msg : this.reactionEmbeddedMessages.keySet()) {
+			if (msg.getId().asLong() == messageID.asLong())
+				removeReactionEmbeddedMessage(msg);
+		}
+	}
 }

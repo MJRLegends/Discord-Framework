@@ -14,7 +14,7 @@
       <dependency>
 		 <groupId>com.discord4j.discord4j</groupId>
 		 <artifactId>discord4j-core</artifactId>
-		 <version>be4d32b</version>
+		 <version>a4eafc0</version>
       </dependency>
    </dependencies>
     <build>

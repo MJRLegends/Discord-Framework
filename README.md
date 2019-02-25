@@ -5,7 +5,7 @@ A Discord-Framework made in Java using Discord 4J. Made for making the creation 
 ``
 Comming soon
 ``
-#### Current Version: 1.0.8
+#### Current Version: 1.1.1
 ### With Maven
 In your `pom.xml` add:
 ```xml

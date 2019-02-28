@@ -144,7 +144,7 @@ public abstract class DiscordBotBase {
 	 * @param builder
 	 * @return
 	 */
-	private Message sendEmbeddedMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
+	public Message sendEmbeddedMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)

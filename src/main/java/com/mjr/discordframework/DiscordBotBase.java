@@ -234,6 +234,31 @@ public abstract class DiscordBotBase {
 			return null;
 		}
 	}
+	
+	/**
+	 * Send a private message to a user
+	 * 
+	 * @param user
+	 * @param message
+	 */
+	public void sendPrivateMessage(User user, String message) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		if (message.length() > 2000)
+			message = message.substring(0, 2000);
+		try {
+			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.getUsername() + " Message: " + message);
+			user.getPrivateChannel().block().createMessage(message).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
+				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.getUsername());
+			}).subscribe();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
+			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.getUsername());
+		}
+	}
 
 	/**
 	 * Send a private message to a user

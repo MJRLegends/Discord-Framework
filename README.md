@@ -1,11 +1,44 @@
 # Discord-Framework
-A Discord-Framework made in Java using Discord 4J. Made for making the creation of Bot's for Discord quicker
+A Discord-Framework made in Java on top of Discord 4J. Made for making the creation of Bot's for Discord quicker
 
-### How to use
-``
-Comming soon
-``
-#### Current Version: 1.1.1
+### Basic, How to use/Example of usage
+#### MainClass
+```
+public class MainClass {
+	public static DiscordBot bot;
+	
+	public static void main(String[] args) {
+		bot = new DiscordBot("TOKENHERE");
+	}
+}
+```
+#### DiscordBot Class
+```
+public class DiscordBot extends DiscordBotBase {
+	public DiscordBot(String token) {
+		super(token);
+		setupEvents();
+	}
+
+	@Override
+	public void onOutputMessage(MessageType type, String message) {
+		if (type == MessageType.Error)
+			this.sendMessage(DiscordBotUtilities.getChannelByID(this.getClient(), Snowflake.of("SERVER/GUILD_ID_HERE")), "Error: " + message)
+
+		else
+			System.out.println(message);
+	}
+
+	@Override
+	public void setupEvents() {
+		this.getDispatcher().on(MessageCreateEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing ReactionRemoveEvent Error: " + t.getMessage())).subscribe(event -> event.getMessage().getContent().ifPresent(c -> System.out.println("Message was created here is the content" + event.getMessage().getContent().get())));
+	}
+}
+
+```
+
+
+#### Current Version: 1.1.2
 ### With Maven
 In your `pom.xml` add:
 ```xml

@@ -23,7 +23,7 @@ public class DiscordBot extends DiscordBotBase {
 	@Override
 	public void onOutputMessage(MessageType type, String message) {
 		if (type == MessageType.Error)
-			this.sendMessage(DiscordBotUtilities.getChannelByID(this.getClient(), Snowflake.of("SERVER/GUILD_ID_HERE")), "Error: " + message)
+			this.sendMessage(DiscordBotUtilities.getChannelByID(this.getClient(), Snowflake.of("CHANNEL_ID_HERE")), "Error: " + message)
 
 		else
 			System.out.println(message);

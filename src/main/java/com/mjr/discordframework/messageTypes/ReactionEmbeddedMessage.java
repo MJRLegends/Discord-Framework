@@ -14,13 +14,15 @@ import reactor.core.publisher.Mono;
 
 public class ReactionEmbeddedMessage extends ReactionMessageBase {
 
-	List<String> reactions = new ArrayList<String>();
+	private List<String> reactions = new ArrayList<String>();
+	private List<String> data = new ArrayList<String>();
 	private Consumer<EmbedCreateSpec> message;
 
-	public ReactionEmbeddedMessage(Consumer<EmbedCreateSpec> message, List<String> reactions) {
+	public ReactionEmbeddedMessage(Consumer<EmbedCreateSpec> message, List<String> reactions, List<String> data) {
 		super();
 		this.message = message;
 		this.reactions = reactions;
+		this.data = data;
 	}
 
 	public Consumer<EmbedCreateSpec> getMessage() {
@@ -37,6 +39,14 @@ public class ReactionEmbeddedMessage extends ReactionMessageBase {
 
 	public void setReactions(List<String> reactions) {
 		this.reactions = reactions;
+	}
+
+	public List<String> getData() {
+		return data;
+	}
+
+	public void setData(List<String> data) {
+		this.data = data;
 	}
 
 	public void removeAllReactionsForUser(Mono<Message> message, Snowflake user) {

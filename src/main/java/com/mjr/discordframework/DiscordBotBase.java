@@ -67,8 +67,7 @@ public abstract class DiscordBotBase {
 				.subscribe(o -> ReactionMessageEventHandler.onMessageReactionAddReceivedEvent(o, this));
 		this.dispatcher.on(ReactionRemoveEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing ReactionRemoveEvent Error: " + t.getMessage()))
 				.subscribe(o -> ReactionMessageEventHandler.onMessageReactionRemoveReceivedEvent(o, this));
-		this.dispatcher.on(MessageDeleteEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing MessageDeleteEvent Error: " + t.getMessage()))
-		.subscribe(o -> GlobalEventHandler.onMessageDelete(o, this));
+		this.dispatcher.on(MessageDeleteEvent.class).onErrorContinue((t, o) -> this.onOutputMessage(MessageType.Error, "Error while processing MessageDeleteEvent Error: " + t.getMessage())).subscribe(o -> GlobalEventHandler.onMessageDelete(o, this));
 		onOutputMessage(MessageType.Info, "Discord Bot has been fully started");
 	}
 
@@ -96,7 +95,7 @@ public abstract class DiscordBotBase {
 	 * @param message
 	 * @return
 	 */
-	public Message sendMessageMessageChannel(Mono<MessageChannel> channel, String message) {
+	public Message sendMessageMC(Mono<MessageChannel> channel, String message) {
 		return sendMessage(channel.ofType(Channel.class), message);
 	}
 
@@ -133,7 +132,7 @@ public abstract class DiscordBotBase {
 	 * @param builder
 	 * @return
 	 */
-	public Message sendEmbeddedMessageMessageChannel(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+	public Message sendEmbeddedMessageMC(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
 		return sendEmbeddedMessage(channel.ofType(Channel.class), builder);
 	}
 
@@ -168,7 +167,7 @@ public abstract class DiscordBotBase {
 	 * @param message
 	 * @return
 	 */
-	public Mono<Message> sendMessageMessageChannelReturnMonoMsg(Mono<MessageChannel> channel, String message) {
+	public Mono<Message> sendMessageMCReturnMonoMsg(Mono<MessageChannel> channel, String message) {
 		return sendMessageReturnMonoMsg(channel.ofType(Channel.class), message);
 	}
 
@@ -206,7 +205,7 @@ public abstract class DiscordBotBase {
 	 * @param builder
 	 * @return
 	 */
-	public Mono<Message> sendEmbeddedMessageMessageChannelReturnMonoMsg(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+	public Mono<Message> sendEmbeddedMessageMCReturnMonoMsg(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
 		return sendEmbeddedMessageReturnMonoMsg(channel.ofType(Channel.class), builder);
 	}
 
@@ -234,7 +233,7 @@ public abstract class DiscordBotBase {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Send a private message to a user
 	 * 
@@ -293,7 +292,53 @@ public abstract class DiscordBotBase {
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedMessageMessageChannel(Mono<MessageChannel> channel, String message, Long delay, TimeUnit timeUnit) {
+	public void sendTimedMessage(Mono<Channel> channel, String message, Long delay, TimeUnit timeUnit) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		try {
+			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			Message lastMessage = sendMessage(channel, message);
+			if (lastMessage != null) {
+				scheduler.schedule(() -> {
+					deleteMessage(lastMessage, "Timed Message Delete");
+				}, delay, timeUnit);
+			}
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Timed Message could not be sent, error: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Send a timed message to a channel
+	 * 
+	 * @param channel
+	 * @param message
+	 */
+	public void sendTimedMessage(Mono<Channel> channel, String message) {
+		sendTimedMessage(channel, message, 1L, TimeUnit.MINUTES);
+	}
+
+	/**
+	 * Send a timed message to a channel
+	 * 
+	 * @param channel
+	 * @param message
+	 */
+	public void sendTimedMessageMC(Mono<MessageChannel> channel, String message) {
+		sendTimedMessage(channel.ofType(Channel.class), message);
+	}
+
+	/**
+	 * Send a timed message to a channel
+	 * 
+	 * @param channel
+	 * @param message
+	 * @param delay
+	 * @param timeUnit
+	 */
+	public void sendTimedMessageMC(Mono<MessageChannel> channel, String message, Long delay, TimeUnit timeUnit) {
 		sendTimedMessage(channel.ofType(Channel.class), message, delay, timeUnit);
 	}
 
@@ -331,14 +376,26 @@ public abstract class DiscordBotBase {
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedEmbeddedMessageMessageChannel(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, long delay, TimeUnit timeUnit) {
+	public void sendTimedEmbeddedMessageMC(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, long delay, TimeUnit timeUnit) {
+		sendTimedEmbeddedMessage(channel.ofType(Channel.class), builder, delay, timeUnit);
+	}
+
+	/**
+	 * Send a timed reaction message to a channel
+	 * 
+	 * @param channel
+	 * @param builder
+	 * @param delay
+	 * @param timeUnit
+	 */
+	public void sendTimedReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel, long delay, TimeUnit timeUnit) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
 		try {
 			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
-			Message lastMessage = sendEmbeddedMessageMessageChannel(channel, builder);
+			Message lastMessage = sendReactionMessage(reactionMessage, channel);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
 					deleteMessage(lastMessage, "Timed Message Delete");
@@ -350,21 +407,33 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a timed message to a channel
+	 * Send a timed reaction embedded message to a channel
 	 * 
 	 * @param channel
-	 * @param message
+	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedMessage(Mono<Channel> channel, String message, Long delay, TimeUnit timeUnit) {
+	public void sendTimedReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
+		sendTimedReactionMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
+	}
+
+	/**
+	 * Send a timed reaction embedded message to a channel
+	 * 
+	 * @param channel
+	 * @param builder
+	 * @param delay
+	 * @param timeUnit
+	 */
+	public void sendTimedReactionEmbeddedMessage(ReactionEmbeddedMessage reactionMessage, Mono<Channel> channel, long delay, TimeUnit timeUnit) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
 		try {
-			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
-			Message lastMessage = sendMessage(channel, message);
+			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+			Message lastMessage = sendReactionEmbeddedMessage(reactionMessage, channel);
 			if (lastMessage != null) {
 				scheduler.schedule(() -> {
 					deleteMessage(lastMessage, "Timed Message Delete");
@@ -376,37 +445,15 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a timed message to a channel
+	 * Send a timed reaction message to a channel
 	 * 
 	 * @param channel
-	 * @param message
+	 * @param builder
+	 * @param delay
+	 * @param timeUnit
 	 */
-	public void sendTimedMessageMessageChannel(Mono<MessageChannel> channel, String message) {
-		sendTimedMessage(channel.ofType(Channel.class), message);
-	}
-
-	/**
-	 * Send a timed message to a channel
-	 * 
-	 * @param channel
-	 * @param message
-	 */
-	public void sendTimedMessage(Mono<Channel> channel, String message) {
-		if (client == null)
-			return;
-		if (client.isConnected() == false)
-			return;
-		try {
-			onOutputMessage(MessageType.Info, "Attempting to send timed message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
-			Message lastMessage = sendMessage(channel, message);
-			if (lastMessage != null) {
-				scheduler.schedule(() -> {
-					deleteMessage(lastMessage, "Timed Message Delete");
-				}, 1L, TimeUnit.MINUTES);
-			}
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Timed Message could not be sent, error: " + e.getMessage());
-		}
+	public void sendTimedReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
+		sendTimedReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
 	}
 
 	/**
@@ -416,11 +463,11 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @return
 	 */
-	public void sendReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel) {
+	public Message sendReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel) {
 		if (client == null)
-			return;
+			return null;
 		if (client.isConnected() == false)
-			return;
+			return null;
 		String message = reactionMessage.getMessage();
 		if (message.length() > 2000)
 			message = message.substring(0, 2000);
@@ -433,9 +480,10 @@ public abstract class DiscordBotBase {
 			for (String reactionDefault : reactionMessage.getReactions())
 				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
 			this.getReactionMessageManager().addReactionMessage(temp, reactionMessage);
+			return temp;
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return;
+			return null;
 		}
 	}
 
@@ -446,8 +494,8 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @return
 	 */
-	public void sendReactionMessageMessageChannel(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
-		sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
+	public Message sendReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
+		return sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
 	}
 
 	/**
@@ -457,19 +505,20 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @return
 	 */
-	public void sendReactionEmbeddedMessage(ReactionEmbeddedMessage reactionMessage, Mono<Channel> channel) {
+	public Message sendReactionEmbeddedMessage(ReactionEmbeddedMessage reactionMessage, Mono<Channel> channel) {
 		if (client == null)
-			return;
+			return null;
 		if (client.isConnected() == false)
-			return;
+			return null;
 		try {
 			Message temp = sendEmbeddedMessage(channel, reactionMessage.getMessage());
 			for (String reactionDefault : reactionMessage.getReactions())
 				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
 			this.getReactionMessageManager().addReactionEmbeddedMessage(temp, reactionMessage);
+			return temp;
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return;
+			return null;
 		}
 	}
 
@@ -480,8 +529,8 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @return
 	 */
-	public void sendReactionEmbeddedMessageMessageChannel(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
-		sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
+	public Message sendReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
+		return sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
 	}
 
 	/**

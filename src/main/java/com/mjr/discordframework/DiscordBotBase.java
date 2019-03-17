@@ -89,6 +89,56 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
+	 * Send a private message to a user
+	 * 
+	 * @param user
+	 * @param message
+	 */
+	public void sendPrivateMessage(User user, String message) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		if (message.length() > 2000)
+			message = message.substring(0, 2000);
+		try {
+			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.getUsername() + " Message: " + message);
+			user.getPrivateChannel().block().createMessage(message).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
+				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.getUsername());
+			}).subscribe();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
+			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.getUsername());
+		}
+	}
+
+	/**
+	 * Send a private message to a user
+	 * 
+	 * @param user
+	 * @param message
+	 */
+	public void sendPrivateMessage(Mono<User> user, String message) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		if (message.length() > 2000)
+			message = message.substring(0, 2000);
+		try {
+			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.block().getUsername() + " Message: " + message);
+			user.block().getPrivateChannel().block().createMessage(message).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
+				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.block().getUsername());
+			}).subscribe();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
+			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.block().getUsername());
+		}
+	}
+
+	/**
 	 * Send a message to a channel, returns a Message object
 	 * 
 	 * @param channel
@@ -116,41 +166,6 @@ public abstract class DiscordBotBase {
 		try {
 			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
-				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
-			});
-			return messageReturn.block();
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return null;
-		}
-	}
-
-	/**
-	 * Send a embedded message to a channel, returns a Message object
-	 * 
-	 * @param channel
-	 * @param builder
-	 * @return
-	 */
-	public Message sendEmbeddedMessageMC(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
-		return sendEmbeddedMessage(channel.ofType(Channel.class), builder);
-	}
-
-	/**
-	 * Send a embedded message to a channel, returns a Message object
-	 * 
-	 * @param channel
-	 * @param builder
-	 * @return
-	 */
-	public Message sendEmbeddedMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
-		if (client == null)
-			return null;
-		if (client.isConnected() == false)
-			return null;
-		try {
-			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
-			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
 				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
 			});
 			return messageReturn.block();
@@ -199,6 +214,41 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
+	 * Send a embedded message to a channel, returns a Message object
+	 * 
+	 * @param channel
+	 * @param builder
+	 * @return
+	 */
+	public Message sendEmbeddedMessageMC(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+		return sendEmbeddedMessage(channel.ofType(Channel.class), builder);
+	}
+
+	/**
+	 * Send a embedded message to a channel, returns a Message object
+	 * 
+	 * @param channel
+	 * @param builder
+	 * @return
+	 */
+	public Message sendEmbeddedMessage(Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
+		if (client == null)
+			return null;
+		if (client.isConnected() == false)
+			return null;
+		try {
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
+			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
+			});
+			return messageReturn.block();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
+			return null;
+		}
+	}
+
+	/**
 	 * Send a embedded message to a channel, returns a Mono<Message> object
 	 * 
 	 * @param channel
@@ -235,53 +285,80 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a private message to a user
+	 * Send a message with reactions functions to a channel
 	 * 
-	 * @param user
-	 * @param message
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
 	 */
-	public void sendPrivateMessage(User user, String message) {
+	public Message sendReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel) {
 		if (client == null)
-			return;
+			return null;
 		if (client.isConnected() == false)
-			return;
+			return null;
+		String message = reactionMessage.getMessage();
 		if (message.length() > 2000)
 			message = message.substring(0, 2000);
 		try {
-			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.getUsername() + " Message: " + message);
-			user.getPrivateChannel().block().createMessage(message).doOnError(error -> {
-				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
-				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.getUsername());
-			}).subscribe();
+			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
+			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
+			});
+			Message temp = messageReturn.block();
+			for (String reactionDefault : reactionMessage.getReactions())
+				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
+			this.getReactionMessageManager().addReactionMessage(temp, reactionMessage);
+			return temp;
 		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
-			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.getUsername());
+			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
+			return null;
 		}
 	}
 
 	/**
-	 * Send a private message to a user
+	 * Send a message with reactions functions to a channel
 	 * 
-	 * @param user
-	 * @param message
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
 	 */
-	public void sendPrivateMessage(Mono<User> user, String message) {
+	public Message sendReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
+		return sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
+	}
+
+	/**
+	 * Send a message with reactions functions to a channel
+	 * 
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
+	public Message sendReactionEmbeddedMessage(ReactionEmbeddedMessage reactionMessage, Mono<Channel> channel) {
 		if (client == null)
-			return;
+			return null;
 		if (client.isConnected() == false)
-			return;
-		if (message.length() > 2000)
-			message = message.substring(0, 2000);
+			return null;
 		try {
-			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.block().getUsername() + " Message: " + message);
-			user.block().getPrivateChannel().block().createMessage(message).doOnError(error -> {
-				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
-				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.block().getUsername());
-			}).subscribe();
+			Message temp = sendEmbeddedMessage(channel, reactionMessage.getMessage());
+			for (String reactionDefault : reactionMessage.getReactions())
+				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
+			this.getReactionMessageManager().addReactionEmbeddedMessage(temp, reactionMessage);
+			return temp;
 		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
-			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.block().getUsername());
+			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
+			return null;
 		}
+	}
+
+	/**
+	 * Send a message with reactions functions to a channel
+	 * 
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
+	public Message sendReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
+		return sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
 	}
 
 	/**
@@ -454,83 +531,6 @@ public abstract class DiscordBotBase {
 	 */
 	public void sendTimedReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
 		sendTimedReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
-	}
-
-	/**
-	 * Send a message with reactions functions to a channel
-	 * 
-	 * @param reactionMessage
-	 * @param channel
-	 * @return
-	 */
-	public Message sendReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel) {
-		if (client == null)
-			return null;
-		if (client.isConnected() == false)
-			return null;
-		String message = reactionMessage.getMessage();
-		if (message.length() > 2000)
-			message = message.substring(0, 2000);
-		try {
-			onOutputMessage(MessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
-			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
-				onOutputMessage(MessageType.Error, "Message could not be sent, error: " + error.getMessage());
-			});
-			Message temp = messageReturn.block();
-			for (String reactionDefault : reactionMessage.getReactions())
-				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
-			this.getReactionMessageManager().addReactionMessage(temp, reactionMessage);
-			return temp;
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return null;
-		}
-	}
-
-	/**
-	 * Send a message with reactions functions to a channel
-	 * 
-	 * @param reactionMessage
-	 * @param channel
-	 * @return
-	 */
-	public Message sendReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
-		return sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
-	}
-
-	/**
-	 * Send a message with reactions functions to a channel
-	 * 
-	 * @param reactionMessage
-	 * @param channel
-	 * @return
-	 */
-	public Message sendReactionEmbeddedMessage(ReactionEmbeddedMessage reactionMessage, Mono<Channel> channel) {
-		if (client == null)
-			return null;
-		if (client.isConnected() == false)
-			return null;
-		try {
-			Message temp = sendEmbeddedMessage(channel, reactionMessage.getMessage());
-			for (String reactionDefault : reactionMessage.getReactions())
-				temp.addReaction(ReactionEmoji.unicode(reactionDefault)).block();
-			this.getReactionMessageManager().addReactionEmbeddedMessage(temp, reactionMessage);
-			return temp;
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return null;
-		}
-	}
-
-	/**
-	 * Send a message with reactions functions to a channel
-	 * 
-	 * @param reactionMessage
-	 * @param channel
-	 * @return
-	 */
-	public Message sendReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
-		return sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
 	}
 
 	/**

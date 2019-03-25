@@ -7,6 +7,8 @@ import discord4j.core.object.entity.Channel;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.MessageChannel;
+import discord4j.core.object.entity.TextChannel;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
@@ -84,6 +86,23 @@ public class DiscordBotUtilities {
 	public static Mono<Channel> getChannelByID(DiscordClient client, Snowflake channelID) {
 		return client.getChannelById(channelID);
 	}
+	
+	/**
+	 * @param channelID
+	 * @return
+	 */
+	public static Mono<TextChannel> getTextChannelByID(DiscordClient client, Snowflake channelID) {
+		return client.getChannelById(channelID).ofType(TextChannel.class);
+	}
+	
+	/**
+	 * @param channelID
+	 * @return
+	 */
+	public static Mono<MessageChannel> getMessageChannelByID(DiscordClient client, Snowflake channelID) {
+		return client.getChannelById(channelID).ofType(MessageChannel.class);
+	}
+
 
 	/**
 	 * @param channel

@@ -1,6 +1,8 @@
 package com.mjr.discordframework;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -94,6 +96,16 @@ public abstract class DiscordBotBase {
 	 * @param user
 	 * @param message
 	 */
+	public void sendPrivateMessage(Mono<User> user, String message) {
+		sendPrivateMessage(user.block(), message);
+	}
+
+	/**
+	 * Send a private message to a user
+	 * 
+	 * @param user
+	 * @param message
+	 */
 	public void sendPrivateMessage(User user, String message) {
 		if (client == null)
 			return;
@@ -110,31 +122,6 @@ public abstract class DiscordBotBase {
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
 			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.getUsername());
-		}
-	}
-
-	/**
-	 * Send a private message to a user
-	 * 
-	 * @param user
-	 * @param message
-	 */
-	public void sendPrivateMessage(Mono<User> user, String message) {
-		if (client == null)
-			return;
-		if (client.isConnected() == false)
-			return;
-		if (message.length() > 2000)
-			message = message.substring(0, 2000);
-		try {
-			onOutputMessage(MessageType.Info, "Attempting to send message to User: " + user.block().getUsername() + " Message: " + message);
-			user.block().getPrivateChannel().block().createMessage(message).doOnError(error -> {
-				onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + error.getMessage());
-				onOutputMessage(MessageType.Error, ":warning: unable to send message to user " + user.block().getUsername());
-			}).subscribe();
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Private Message could not be sent, error: " + e.getMessage());
-			onOutputMessage(MessageType.Error, ":warning: unable to send message of ```" + message + "```" + " to user " + user.block().getUsername());
 		}
 	}
 
@@ -291,6 +278,17 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @return
 	 */
+	public Message sendReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
+		return sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
+	}
+
+	/**
+	 * Send a message with reactions functions to a channel
+	 * 
+	 * @param reactionMessage
+	 * @param channel
+	 * @return
+	 */
 	public Message sendReactionMessage(ReactionMessage reactionMessage, Mono<Channel> channel) {
 		if (client == null)
 			return null;
@@ -322,8 +320,8 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @return
 	 */
-	public Message sendReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel) {
-		return sendReactionMessage(reactionMessage, channel.ofType(Channel.class));
+	public Message sendReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
+		return sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
 	}
 
 	/**
@@ -351,14 +349,35 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a message with reactions functions to a channel
+	 * Send a timed message to a channel
 	 * 
-	 * @param reactionMessage
 	 * @param channel
-	 * @return
+	 * @param message
 	 */
-	public Message sendReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel) {
-		return sendReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class));
+	public void sendTimedMessage(Mono<Channel> channel, String message) {
+		sendTimedMessage(channel, message, 1L, TimeUnit.MINUTES);
+	}
+
+	/**
+	 * Send a timed message to a channel
+	 * 
+	 * @param channel
+	 * @param message
+	 * @param delay
+	 * @param timeUnit
+	 */
+	public void sendTimedMessageMC(Mono<MessageChannel> channel, String message, Long delay, TimeUnit timeUnit) {
+		sendTimedMessage(channel.ofType(Channel.class), message, delay, timeUnit);
+	}
+
+	/**
+	 * Send a timed message to a channel
+	 * 
+	 * @param channel
+	 * @param message
+	 */
+	public void sendTimedMessageMC(Mono<MessageChannel> channel, String message) {
+		sendTimedMessage(channel.ofType(Channel.class), message);
 	}
 
 	/**
@@ -388,35 +407,15 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a timed message to a channel
+	 * Send a timed embedded message to a channel
 	 * 
 	 * @param channel
-	 * @param message
-	 */
-	public void sendTimedMessage(Mono<Channel> channel, String message) {
-		sendTimedMessage(channel, message, 1L, TimeUnit.MINUTES);
-	}
-
-	/**
-	 * Send a timed message to a channel
-	 * 
-	 * @param channel
-	 * @param message
-	 */
-	public void sendTimedMessageMC(Mono<MessageChannel> channel, String message) {
-		sendTimedMessage(channel.ofType(Channel.class), message);
-	}
-
-	/**
-	 * Send a timed message to a channel
-	 * 
-	 * @param channel
-	 * @param message
+	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedMessageMC(Mono<MessageChannel> channel, String message, Long delay, TimeUnit timeUnit) {
-		sendTimedMessage(channel.ofType(Channel.class), message, delay, timeUnit);
+	public void sendTimedEmbeddedMessageMC(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, long delay, TimeUnit timeUnit) {
+		sendTimedEmbeddedMessage(channel.ofType(Channel.class), builder, delay, timeUnit);
 	}
 
 	/**
@@ -446,15 +445,15 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a timed embedded message to a channel
+	 * Send a timed reaction embedded message to a channel
 	 * 
 	 * @param channel
 	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedEmbeddedMessageMC(Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, long delay, TimeUnit timeUnit) {
-		sendTimedEmbeddedMessage(channel.ofType(Channel.class), builder, delay, timeUnit);
+	public void sendTimedReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
+		sendTimedReactionMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
 	}
 
 	/**
@@ -484,15 +483,15 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a timed reaction embedded message to a channel
+	 * Send a timed reaction message to a channel
 	 * 
 	 * @param channel
 	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
-	public void sendTimedReactionMessageMC(ReactionMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
-		sendTimedReactionMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
+	public void sendTimedReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
+		sendTimedReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
 	}
 
 	/**
@@ -522,24 +521,12 @@ public abstract class DiscordBotBase {
 	}
 
 	/**
-	 * Send a timed reaction message to a channel
-	 * 
-	 * @param channel
-	 * @param builder
-	 * @param delay
-	 * @param timeUnit
-	 */
-	public void sendTimedReactionEmbeddedMessageMC(ReactionEmbeddedMessage reactionMessage, Mono<MessageChannel> channel, long delay, TimeUnit timeUnit) {
-		sendTimedReactionEmbeddedMessage(reactionMessage, channel.ofType(Channel.class), delay, timeUnit);
-	}
-
-	/**
 	 * Delete all messages from a channel
 	 * 
 	 * @param channel
 	 */
 	public void deleteAllMessagesInMessageChannel(Mono<MessageChannel> channel) {
-		deleteAllMessagesInChannel(channel.ofType(Channel.class));
+		deleteAllMessagesInChannel(channel.ofType(TextChannel.class));
 	}
 
 	/**
@@ -547,25 +534,66 @@ public abstract class DiscordBotBase {
 	 * 
 	 * @param channel
 	 */
-	public void deleteAllMessagesInChannel(Mono<Channel> channel) {
+	public void deleteAllMessagesInChannel(Mono<TextChannel> channel) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
 			return;
+		TextChannel textChannel = channel.block();
 		try {
-			TextChannel textChannel = channel.ofType(TextChannel.class).block();
 			onOutputMessage(MessageType.Info, "Attempting to run a nuke of all messages on Channel: " + channel.ofType(TextChannel.class).block().getName());
+
+			List<Snowflake> messagesIDS = new ArrayList<Snowflake>();
 			Flux<Message> messages = textChannel.getMessagesBefore(Snowflake.of(Instant.now()));
-			for (Message message : messages.toIterable()) {
-				message.delete().doOnError(error -> {
-					onOutputMessage(MessageType.Error, "Channel could not be nuked of messages due to: " + error.getMessage());
-					onOutputMessage(MessageType.Error, ":warning: unable to nuke all messages from " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-				}).block();
-				this.getReactionMessageManager().removeEmbeddedMessage(message);
+			for (Message temp : messages.collectList().block()) {
+				messagesIDS.add(temp.getId());
+				this.getReactionMessageManager().removeEmbeddedMessage(temp);
 			}
+			onOutputMessage(MessageType.Info, "Deleting Bulk Messages from " + textChannel.getName());
+			textChannel.bulkDelete(Flux.fromIterable(messagesIDS)).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Channel could not be nuked of messages due to: " + error.getMessage());
+				onOutputMessage(MessageType.Error, ":warning: unable to nuke all messages from " + textChannel.getName() + " due to an error, please check the log for details!");
+			}).subscribe();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Channel could not be nuked of messages due to: " + e.getMessage());
-			onOutputMessage(MessageType.Error, ":warning: unable to nuke all messages from " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
+			onOutputMessage(MessageType.Error, ":warning: unable to nuke all messages from " + textChannel.getName() + " due to an error, please check the log for details!");
+		}
+	}
+
+	/**
+	 * Bulk delete messages from a channel
+	 * 
+	 * @param message
+	 */
+	public void deleteAllMessagesInMessageChannel(Mono<MessageChannel> channel, List<Message> messagesToDelete, String reason) {
+		deleteAllMessagesInChannel(channel.ofType(TextChannel.class), messagesToDelete, reason);
+	}
+
+	/**
+	 * Bulk delete messages from a channel
+	 * 
+	 * @param message
+	 */
+	public void deleteAllMessagesInChannel(Mono<TextChannel> channel, List<Message> messagesToDelete, String reason) {
+		if (client == null)
+			return;
+		if (client.isConnected() == false)
+			return;
+		TextChannel textChannel = channel.block();
+		try {
+			List<Snowflake> messagesIDS = new ArrayList<Snowflake>();
+			for (Message temp : messagesToDelete) {
+				messagesIDS.add(temp.getId());
+				this.getReactionMessageManager().removeEmbeddedMessage(temp);
+			}
+			onOutputMessage(MessageType.Info, "Deleting Bulk Messages from " + textChannel.getName());
+			textChannel.bulkDelete(Flux.fromIterable(messagesIDS)).doOnError(error -> {
+				onOutputMessage(MessageType.Error, "Bulk Messages could not be deleted from channel  " + textChannel.getName() + " due to: " + error.getMessage());
+				onOutputMessage(MessageType.Error, ":warning: unable to delete a messages in " + textChannel.getName() + " due to an error, please check the log for details!");
+			}).subscribe();
+		} catch (Exception e) {
+			onOutputMessage(MessageType.Error, "Bulk Messages could not be deleted, error: " + e.getMessage());
+			onOutputMessage(MessageType.Error, ":warning: unable to delete a messages in " + textChannel.getName() + " due to an error, please check the log for details!");
 		}
 	}
 
@@ -575,21 +603,7 @@ public abstract class DiscordBotBase {
 	 * @param message
 	 */
 	public void deleteMessage(Mono<Message> message, String reason) {
-		if (client == null)
-			return;
-		if (client.isConnected() == false)
-			return;
-		try {
-			onOutputMessage(MessageType.Info, "Deleting message with id: " + message.block().getId() + " from " + message.block().getChannel().ofType(TextChannel.class).block().getName());
-			message.block().delete(reason).doOnError(error -> {
-				onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + error.getMessage());
-				onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.block().getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-			}).block();
-			this.getReactionMessageManager().removeEmbeddedMessage(message.block());
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + e.getMessage());
-			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + message.block().getChannel().ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-		}
+		deleteMessage(message.block(), reason);
 	}
 
 	/**
@@ -621,18 +635,31 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @param messageID
 	 */
-	public void deleteMessage(Mono<Channel> channel, Snowflake messageID, String reason) {
-		if (client == null)
-			return;
-		if (client.isConnected() == false)
-			return;
-		try {
-			deleteMessage(channel, client.getMessageById(channel.block().getId(), messageID), reason);
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Message could not be deleted, error: " + e.getMessage());
-			onOutputMessage(MessageType.Error, ":warning: unable to delete a message in " + channel.ofType(TextChannel.class).block().getName() + " due to an error, please check the log for details!");
-		}
+	public void deleteMessageFromChannel(Mono<Channel> channel, Snowflake messageID, String reason) {
+		deleteMessageFromChannel(channel, client.getMessageById(channel.block().getId(), messageID), reason);
 	}
+
+	/**
+	 * Delete a message from a channel
+	 * 
+	 * @param channel
+	 * @param messageID
+	 */
+	public void deleteMessageFromMessageChannel(Mono<MessageChannel> channel, Snowflake messageID, String reason) {
+		deleteMessageFromChannel(channel.ofType(Channel.class), client.getMessageById(channel.block().getId(), messageID), reason);
+	}
+	
+	
+	/**
+	 * Delete a message from a channel
+	 * 
+	 * @param channel
+	 * @param messageID
+	 */
+	public void deleteMessageFromTextChannel(Mono<TextChannel> channel, Snowflake messageID, String reason) {
+		deleteMessageFromChannel(channel.ofType(Channel.class), client.getMessageById(channel.block().getId(), messageID), reason);
+	}
+	
 
 	/**
 	 * Delete a message from a channel
@@ -640,7 +667,7 @@ public abstract class DiscordBotBase {
 	 * @param channel
 	 * @param message
 	 */
-	public void deleteMessage(Mono<Channel> channel, Mono<Message> message, String reason) {
+	public void deleteMessageFromChannel(Mono<Channel> channel, Mono<Message> message, String reason) {
 		if (client == null)
 			return;
 		if (client.isConnected() == false)
@@ -659,6 +686,17 @@ public abstract class DiscordBotBase {
 	 * Edit a already sent message
 	 * 
 	 * @param oldMessage
+	 * @param content
+	 * @return
+	 */
+	public Message editMessage(Mono<Message> oldMessage, final String content) {
+		return editMessage(oldMessage, spec -> spec.setContent(content));
+	}
+
+	/**
+	 * Edit a already sent message
+	 * 
+	 * @param oldMessage
 	 * @param newMessage
 	 * @return
 	 */
@@ -669,26 +707,6 @@ public abstract class DiscordBotBase {
 			return null;
 		try {
 			return oldMessage.block().edit(newMessage).block();
-		} catch (Exception e) {
-			onOutputMessage(MessageType.Error, "Message could not be edited, error: " + e.getMessage());
-			return null;
-		}
-	}
-
-	/**
-	 * Edit a already sent message
-	 * 
-	 * @param oldMessage
-	 * @param content
-	 * @return
-	 */
-	public Message editMessage(Mono<Message> oldMessage, final String content) {
-		if (client == null)
-			return null;
-		if (client.isConnected() == false)
-			return null;
-		try {
-			return oldMessage.block().edit(spec -> spec.setContent(content)).block();
 		} catch (Exception e) {
 			onOutputMessage(MessageType.Error, "Message could not be edited, error: " + e.getMessage());
 			return null;

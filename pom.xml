@@ -12,9 +12,9 @@
    </repositories>
    <dependencies>
       <dependency>
-		 <groupId>com.discord4j.discord4j</groupId>
+   		 <groupId>com.discord4j</groupId>
 		 <artifactId>discord4j-core</artifactId>
-		 <version>5025428</version>
+    	 <version>3.0.7</version>
       </dependency>
    </dependencies>
     <build>

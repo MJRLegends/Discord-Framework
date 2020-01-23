@@ -2,3 +2,5 @@ bin/
 .metadata/
 target/
 .settings/
+
+pircbot-1.5.0-custom.jar

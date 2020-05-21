@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.mjr.discordframework</groupId>
   <artifactId>Discord-Framework</artifactId>
-  <version>1.1.3</version>
+  <version>1.1.5</version>
   <build>
     <resources>
       <resource>
@@ -22,7 +22,6 @@
               <mainClass>com.mjr.DiscordBot</mainClass>
             </manifest>
           </archive>
-          <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
       <plugin>
@@ -46,7 +45,6 @@
             <configuration>
               <minimizeJar>false</minimizeJar>
               <artifactSet />
-              <encoding>UTF-8</encoding>
             </configuration>
           </execution>
         </executions>

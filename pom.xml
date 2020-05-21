@@ -14,7 +14,7 @@
       <dependency>
    		 <groupId>com.discord4j</groupId>
 		 <artifactId>discord4j-core</artifactId>
-    	 <version>3.0.12</version>
+    	 <version>3.0.14</version>
       </dependency>
    </dependencies>
     <build>
@@ -31,7 +31,6 @@
                             <mainClass>com.mjr.DiscordBot</mainClass>
                         </manifest>
                     </archive>
-                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>
@@ -58,7 +57,6 @@
                             <minimizeJar>false</minimizeJar>
                             <artifactSet>
                             </artifactSet>
-                            <encoding>UTF-8</encoding>
                         </configuration>
                     </execution>
                 </executions>

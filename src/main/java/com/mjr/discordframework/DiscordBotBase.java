@@ -447,8 +447,8 @@ public abstract class DiscordBotBase {
 	/**
 	 * Send a timed reaction embedded message to a channel
 	 * 
+	 * @param reactionMessage
 	 * @param channel
-	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
@@ -459,8 +459,8 @@ public abstract class DiscordBotBase {
 	/**
 	 * Send a timed reaction message to a channel
 	 * 
+	 * @param reactionMessage
 	 * @param channel
-	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
@@ -485,8 +485,8 @@ public abstract class DiscordBotBase {
 	/**
 	 * Send a timed reaction message to a channel
 	 * 
+	 * @param reactionMessage
 	 * @param channel
-	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
@@ -497,8 +497,8 @@ public abstract class DiscordBotBase {
 	/**
 	 * Send a timed reaction embedded message to a channel
 	 * 
+	 * @param reactionMessage
 	 * @param channel
-	 * @param builder
 	 * @param delay
 	 * @param timeUnit
 	 */
@@ -562,8 +562,10 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Bulk delete messages from a channel
-	 * 
-	 * @param message
+	 *
+	 * @param channel
+	 * @param messagesToDelete
+	 * @param reason
 	 */
 	public void deleteAllMessagesInMessageChannel(Mono<MessageChannel> channel, List<Message> messagesToDelete, String reason) {
 		deleteAllMessagesInChannel(channel.ofType(TextChannel.class), messagesToDelete, reason);
@@ -571,8 +573,10 @@ public abstract class DiscordBotBase {
 
 	/**
 	 * Bulk delete messages from a channel
-	 * 
-	 * @param message
+	 *
+	 * @param channel
+	 * @param messagesToDelete
+	 * @param reason
 	 */
 	public void deleteAllMessagesInChannel(Mono<TextChannel> channel, List<Message> messagesToDelete, String reason) {
 		if (client == null)

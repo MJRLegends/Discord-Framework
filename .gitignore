@@ -2,5 +2,7 @@ bin/
 .metadata/
 target/
 .settings/
-
+.idea/
 pircbot-1.5.0-custom.jar
+
+*.iml

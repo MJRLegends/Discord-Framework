@@ -1,4 +1,4 @@
-package com.mjr.discordframework;
+package com.mjr.discordframework.util;
 
 import java.util.Optional;
 

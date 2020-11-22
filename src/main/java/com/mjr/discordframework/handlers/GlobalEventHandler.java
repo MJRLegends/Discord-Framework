@@ -1,4 +1,6 @@
-package com.mjr.discordframework;
+package com.mjr.discordframework.handlers;
+
+import com.mjr.discordframework.DiscordBotBase;
 
 import discord4j.core.event.domain.message.MessageDeleteEvent;
 

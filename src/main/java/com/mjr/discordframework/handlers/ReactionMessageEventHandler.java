@@ -1,5 +1,6 @@
-package com.mjr.discordframework;
+package com.mjr.discordframework.handlers;
 
+import com.mjr.discordframework.DiscordBotBase;
 import com.mjr.discordframework.messageTypes.ReactionMessage;
 
 import discord4j.core.event.domain.message.ReactionAddEvent;

@@ -1,4 +1,4 @@
-package com.mjr.discordframework;
+package com.mjr.discordframework.managers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import com.mjr.discordframework.messageTypes.ReactionMessage;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.util.Snowflake;
 
-public class ReactionMessageManager {
+public class DiscordReactionMessageManager {
 	private Map<Message, ReactionMessage> reactionMessages = new HashMap<Message, ReactionMessage>();
 	private Map<Message, ReactionEmbeddedMessage> reactionEmbeddedMessages = new HashMap<Message, ReactionEmbeddedMessage>();
 

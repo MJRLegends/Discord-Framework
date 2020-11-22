@@ -38,7 +38,7 @@ public class DiscordBot extends DiscordBotBase {
 ```
 
 
-#### Current Version: 1.1.7
+#### Current Version: 1.1.8
 ### With Maven
 In your `pom.xml` add:
 ```xml

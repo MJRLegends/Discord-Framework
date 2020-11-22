@@ -1,7 +1,7 @@
-package com.mjr.discordframework.handlers;
+package com.mjr.discordframework.reactionMessage.handlers;
 
 import com.mjr.discordframework.DiscordBotBase;
-import com.mjr.discordframework.messageTypes.ReactionMessage;
+import com.mjr.discordframework.reactionMessage.messageTypes.ReactionMessage;
 
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.event.domain.message.ReactionRemoveEvent;

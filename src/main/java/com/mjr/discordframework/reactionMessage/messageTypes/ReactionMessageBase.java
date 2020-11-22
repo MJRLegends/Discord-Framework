@@ -1,4 +1,4 @@
-package com.mjr.discordframework.messageTypes;
+package com.mjr.discordframework.reactionMessage.messageTypes;
 
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.event.domain.message.ReactionRemoveEvent;

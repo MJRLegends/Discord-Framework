@@ -1,4 +1,4 @@
-package com.mjr.discordframework.messageTypes;
+package com.mjr.discordframework.reactionMessage.messageTypes;
 
 import java.util.ArrayList;
 import java.util.List;

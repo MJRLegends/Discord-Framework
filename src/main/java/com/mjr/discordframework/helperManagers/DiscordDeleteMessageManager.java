@@ -1,4 +1,4 @@
-package com.mjr.discordframework.managers;
+package com.mjr.discordframework.helperManagers;
 
 import java.time.Instant;
 import java.util.ArrayList;

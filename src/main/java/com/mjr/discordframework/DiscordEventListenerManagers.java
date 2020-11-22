@@ -1,11 +1,11 @@
-package com.mjr.discordframework.managers;
+package com.mjr.discordframework;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mjr.discordframework.events.DiscordEvent;
 
-public class DiscordEventListeners {
+public class DiscordEventListenerManagers {
 	private static List<DiscordEvent> listeners = new ArrayList<DiscordEvent>();
 
 	public static void registerEventHandler(DiscordEvent event) {

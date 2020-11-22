@@ -3,8 +3,8 @@ package com.mjr.discordframework;
 import java.util.function.Consumer;
 
 import com.mjr.discordframework.handlers.GlobalEventHandler;
-import com.mjr.discordframework.handlers.ReactionMessageEventHandler;
-import com.mjr.discordframework.managers.DiscordReactionMessageManager;
+import com.mjr.discordframework.reactionMessage.handlers.ReactionMessageEventHandler;
+import com.mjr.discordframework.reactionMessage.DiscordReactionMessageManager;
 
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;

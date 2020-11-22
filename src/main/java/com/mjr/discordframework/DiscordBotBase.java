@@ -37,7 +37,7 @@ public abstract class DiscordBotBase {
 	private DiscordReactionMessageManager reactionMessageManager;
 
 	/**
-	 * Setup Discord Bot instance, make sure to call {@link #setupEvents()} after creating your instance
+	 * Setup Discord Bot instance
 	 *
 	 * @param token
 	 */
@@ -58,6 +58,7 @@ public abstract class DiscordBotBase {
 		this.dispatcher.on(MessageDeleteEvent.class).onErrorContinue((t, o) -> DiscordEventHooks.triggerMessageEvent(this.client, DiscordMessageType.Error, "Error while processing MessageDeleteEvent Error: " + t.getMessage()))
 				.subscribe(o -> GlobalEventHandler.onMessageDelete(o, this));
 		DiscordEventHooks.triggerMessageEvent(this.client, DiscordMessageType.Info, "Discord Bot has been fully started");
+		DiscordEventHooks.triggerClientConnectedEvent(this.client, this.dispatcher);
 	}
 
 	/**
@@ -143,9 +144,4 @@ public abstract class DiscordBotBase {
 	public void setReactionMessageManager(DiscordReactionMessageManager reactionMessageManager) {
 		this.reactionMessageManager = reactionMessageManager;
 	}
-
-	/**
-	 * Should be used to register events using {@link #getDispatcher()}.on() Must be called after creating your bot instance
-	 */
-	public abstract void setupEvents();
 }

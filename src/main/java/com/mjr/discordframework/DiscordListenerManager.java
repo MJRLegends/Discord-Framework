@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.mjr.discordframework.events.DiscordEvent;
 
-public class DiscordEventListenerManagers {
+public class DiscordListenerManager {
 	private static List<DiscordEvent> listeners = new ArrayList<DiscordEvent>();
 
 	public static void registerEventHandler(DiscordEvent event) {

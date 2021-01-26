@@ -71,7 +71,10 @@ public class DiscordSendMessageManager {
 	 * @return
 	 */
 	public static Message sendMessage(DiscordClient client, Mono<Channel> channel, String message) {
-		return sendMessageReturnMonoMsg(client, channel, message).block();
+		Mono<Message> messageReturned = sendMessageReturnMonoMsg(client, channel, message);
+		if(messageReturned == null)
+			return null;
+		return messageReturned.block();
 	}
 
 	/**
@@ -131,7 +134,10 @@ public class DiscordSendMessageManager {
 	 * @return
 	 */
 	public static Message sendEmbeddedMessage(DiscordClient client, Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
-		return sendEmbeddedMessageReturnMonoMsg(client, channel, builder).block();
+		Mono<Message> messageReturned = sendEmbeddedMessageReturnMonoMsg(client, channel, builder);
+		if(messageReturned == null)
+			return null;
+		return messageReturned.block();
 	}
 
 	/**

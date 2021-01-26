@@ -11,6 +11,7 @@ import com.mjr.discordframework.DiscordEventHooks;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.entity.*;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.http.client.ClientException;
 import reactor.core.publisher.Mono;
 
 public class DiscordSendMessageManager {
@@ -58,7 +59,7 @@ public class DiscordSendMessageManager {
 	 * @param message
 	 * @return
 	 */
-	public Message sendMessageMC(DiscordClient client, Mono<MessageChannel> channel, String message) {
+	public static Message sendMessageMC(DiscordClient client, Mono<MessageChannel> channel, String message) {
 		return sendMessage(client, channel.ofType(Channel.class), message);
 	}
 
@@ -70,22 +71,7 @@ public class DiscordSendMessageManager {
 	 * @return
 	 */
 	public static Message sendMessage(DiscordClient client, Mono<Channel> channel, String message) {
-		if (client == null)
-			return null;
-		if (client.isConnected() == false)
-			return null;
-		if (message.length() > 2000)
-			message = message.substring(0, 2000);
-		try {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
-			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
-				DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + error.getMessage());
-			});
-			return messageReturn.block();
-		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return null;
-		}
+		return sendMessageReturnMonoMsg(client, channel, message).block();
 	}
 
 	/**
@@ -95,7 +81,7 @@ public class DiscordSendMessageManager {
 	 * @param message
 	 * @return
 	 */
-	public Mono<Message> sendMessageMCReturnMonoMsg(DiscordClient client, Mono<MessageChannel> channel, String message) {
+	public static Mono<Message> sendMessageMCReturnMonoMsg(DiscordClient client, Mono<MessageChannel> channel, String message) {
 		return sendMessageReturnMonoMsg(client, channel.ofType(Channel.class), message);
 	}
 
@@ -106,7 +92,7 @@ public class DiscordSendMessageManager {
 	 * @param message
 	 * @return
 	 */
-	public Mono<Message> sendMessageReturnMonoMsg(DiscordClient client, Mono<Channel> channel, String message) {
+	public static Mono<Message> sendMessageReturnMonoMsg(DiscordClient client, Mono<Channel> channel, String message) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -116,12 +102,12 @@ public class DiscordSendMessageManager {
 		try {
 			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: " + message);
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(message).doOnError(error -> {
-				DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + error.getMessage());
+				DiscordEventHooks.triggerMessageErrorEvent(client, "Embedded Message could not be sent due to an exception" + error.getMessage(), error instanceof ClientException ? ((ClientException)error).getStatus() : null);
 			});
 			messageReturn.subscribe();
 			return messageReturn;
 		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + e.getMessage());
+			DiscordEventHooks.triggerMessageErrorEvent(client, "Embedded Message could not be sent due to an exception" + e.getMessage(), null);
 			return null;
 		}
 	}
@@ -133,7 +119,7 @@ public class DiscordSendMessageManager {
 	 * @param builder
 	 * @return
 	 */
-	public Message sendEmbeddedMessageMC(DiscordClient client, Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+	public static Message sendEmbeddedMessageMC(DiscordClient client, Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
 		return sendEmbeddedMessage(client, channel.ofType(Channel.class), builder);
 	}
 
@@ -145,20 +131,7 @@ public class DiscordSendMessageManager {
 	 * @return
 	 */
 	public static Message sendEmbeddedMessage(DiscordClient client, Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
-		if (client == null)
-			return null;
-		if (client.isConnected() == false)
-			return null;
-		try {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
-			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
-				DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + error.getMessage());
-			});
-			return messageReturn.block();
-		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + e.getMessage());
-			return null;
-		}
+		return sendEmbeddedMessageReturnMonoMsg(client, channel, builder).block();
 	}
 
 	/**
@@ -168,7 +141,7 @@ public class DiscordSendMessageManager {
 	 * @param builder
 	 * @return
 	 */
-	public Message sendEmbeddedWithNormalMessageMC(DiscordClient client, Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, String message) {
+	public static Message sendEmbeddedWithNormalMessageMC(DiscordClient client, Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder, String message) {
 		return sendEmbeddedWithNormalMessage(client, channel.ofType(Channel.class), builder, message);
 	}
 
@@ -187,11 +160,11 @@ public class DiscordSendMessageManager {
 		try {
 			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder).setContent(message)).doOnError(error -> {
-				DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + error.getMessage());
+				DiscordEventHooks.triggerMessageErrorEvent(client, "Embedded/Normal Message could not be sent due to an exception" + error.getMessage(), error instanceof ClientException ? ((ClientException)error).getStatus() : null);
 			});
 			return messageReturn.block();
 		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + e.getMessage());
+			DiscordEventHooks.triggerMessageErrorEvent(client, "Embedded/Normal Message could not be sent due to an exception" + e.getMessage(), null);
 			return null;
 		}
 	}
@@ -203,7 +176,7 @@ public class DiscordSendMessageManager {
 	 * @param builder
 	 * @return
 	 */
-	public Mono<Message> sendEmbeddedMessageMCReturnMonoMsg(DiscordClient client, Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
+	public static Mono<Message> sendEmbeddedMessageMCReturnMonoMsg(DiscordClient client, Mono<MessageChannel> channel, Consumer<EmbedCreateSpec> builder) {
 		return sendEmbeddedMessageReturnMonoMsg(client, channel.ofType(Channel.class), builder);
 	}
 
@@ -214,7 +187,7 @@ public class DiscordSendMessageManager {
 	 * @param builder
 	 * @return
 	 */
-	private Mono<Message> sendEmbeddedMessageReturnMonoMsg(DiscordClient client, Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
+	private static Mono<Message> sendEmbeddedMessageReturnMonoMsg(DiscordClient client, Mono<Channel> channel, Consumer<EmbedCreateSpec> builder) {
 		if (client == null)
 			return null;
 		if (client.isConnected() == false)
@@ -222,12 +195,12 @@ public class DiscordSendMessageManager {
 		try {
 			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Info, "Attempting to send message to Channel: " + channel.ofType(TextChannel.class).block().getName() + " Message: Embedded Message");
 			Mono<Message> messageReturn = channel.ofType(TextChannel.class).block().createMessage(spec -> spec.setEmbed(builder)).doOnError(error -> {
-				DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + error.getMessage());
+				DiscordEventHooks.triggerMessageErrorEvent(client, "Message could not be sent due to an exception" + error.getMessage(), error instanceof ClientException ? ((ClientException)error).getStatus() : null);
 			});
 			messageReturn.subscribe();
 			return messageReturn;
 		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Message could not be sent, error: " + e.getMessage());
+			DiscordEventHooks.triggerMessageErrorEvent(client, "Message could not be sent due to an exception" + e.getMessage(), null);
 			return null;
 		}
 	}
@@ -287,7 +260,7 @@ public class DiscordSendMessageManager {
 				}, delay, timeUnit);
 			}
 		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Timed Message could not be sent, error: " + e.getMessage());
+			DiscordEventHooks.triggerMessageErrorEvent(client, "Timed Message could not be sent due to an exception" + e.getMessage(), null);
 		}
 	}
 
@@ -325,7 +298,7 @@ public class DiscordSendMessageManager {
 				}, delay, timeUnit);
 			}
 		} catch (Exception e) {
-			DiscordEventHooks.triggerMessageEvent(client, DiscordBotBase.DiscordMessageType.Error, "Timed Message could not be sent, error: " + e.getMessage());
+			DiscordEventHooks.triggerMessageErrorEvent(client, "Timed Message could not be sent due to an exception" + e.getMessage(), null);
 		}
 	}
 }

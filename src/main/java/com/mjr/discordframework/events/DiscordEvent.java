@@ -2,7 +2,7 @@ package com.mjr.discordframework.events;
 
 public class DiscordEvent {
 	public enum DiscordEventType {
-		DEBUG("Debug"), CONNECTED("Connected");
+		DEBUG("Debug"), CONNECTED("Connected"), MESSAGE_ERROR("MessageError");
 
 		public final String name;
 
